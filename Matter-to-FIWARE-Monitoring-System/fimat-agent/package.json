@@ -1,0 +1,18 @@
+{
+  "name": "fimat-agent",
+  "version": "1.0.0",
+  "description": "FIWARE IoT Agent for Matter - Semantic Proxy and NGSI-v2 Converter",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}

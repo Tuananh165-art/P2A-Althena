@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resilience Smart Home Monitor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🏠 Resilience Smart Home Monitor</h1>
+            <p>Giám sát giả lập thiên tai (Ngập lụt, Hỏa hoạn)</p>
+        </header>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">FIWARE Orion:</span>
+                <span id="orion-status" class="status-dot" style="background-color: #ccc;">●</span>
+                <span id="orion-text">Đang kết nối...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Cập nhật lần cuối:</span>
+                <span id="last-update">-</span>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="devices-grid">
+            <!-- Humidity Sensor Card -->
+            <div class="device-card">
+                <div class="device-header">
+                    <h2>💧 Cảm Biến Độ Ẩm</h2>
+                    <span class="device-id">NodeID: 1</span>
+                </div>
+                <div class="device-content">
+                    <div class="metric">
+                        <span class="metric-label">Độ Ẩm Hiện Tại:</span>
+                        <span class="metric-value" id="humidity-value">--</span>
+                        <span class="metric-unit">% RH</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="humidity-progress" style="width: 0%"></div>
+                    </div>
+                    <div class="status-info" id="humidity-status">Đang chờ dữ liệu...</div>
+                </div>
+            </div>
+
+            <!-- Smart Plug Card -->
+            <div class="device-card">
+                <div class="device-header">
+                    <h2>⚡ Ổ Cắm Thông Minh</h2>
+                    <span class="device-id">NodeID: 2</span>
+                </div>
+                <div class="device-content">
+                    <div class="metric" style="margin-bottom: 20px;">
+                        <span class="metric-label">Trạng Thái:</span>
+                        <span class="status-badge" id="plug-status">CHƯA CÓ DỮ LIỆU</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Công Suất:</span>
+                        <span class="metric-value" id="power-value">--</span>
+                        <span class="metric-unit">W</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="power-progress" style="width: 0%; background-color: #ff9800;"></div>
+                    </div>
+                    <button class="btn-control" id="toggle-plug">Kiểm Soát Ổ Cắm</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heatmap Section -->
+        <div class="section">
+            <h3>📊 Dữ Liệu Thực Thời từ FIWARE Orion</h3>
+            <div id="entities-list" class="entities-list">
+                <p class="loading">Đang tải dữ liệu...</p>
+            </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div class="section">
+            <h3>🚨 Cảnh Báo</h3>
+            <div id="alerts-container" class="alerts-container">
+                <p class="no-alerts">Không có cảnh báo</p>
+            </div>
+        </div>
+
+        <!-- Raw JSON Section (Debug) -->
+        <div class="section debug-section">
+            <h3>🔍 Dữ Liệu JSON (Debug)</h3>
+            <pre id="debug-json">Đang chờ dữ liệu...</pre>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "matter-emulators",
+  "version": "1.0.0",
+  "description": "Matter Device Emulators for Resilience Copilot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "humidity": "node humidity-sensor.js",
+    "plug": "node smart-plug.js"
+  },
+  "dependencies": {
+    "@project-chip/matter.js": "^0.7.0",
+    "dotenv": "^16.0.3"
+  }
+}

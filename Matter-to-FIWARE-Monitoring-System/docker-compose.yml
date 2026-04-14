@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:4.4
+    container_name: fiware-mongo
+    command: --nojournal
+    ports:
+      - "27017:27017"
+    networks:
+      - fiware-net
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  orion:
+    image: fiware/orion:3.10.1
+    container_name: fiware-orion
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "1026:1026"
+    command: -dbhost mongo -logForHumans -logLevel INFO
+    networks:
+      - fiware-net
+
+networks:
+  fiware-net:
+    driver: bridge
