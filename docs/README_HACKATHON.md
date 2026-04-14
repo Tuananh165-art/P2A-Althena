@@ -29,6 +29,12 @@
 - Có stack chạy thật trong repo (Orion/Mongo, agent, dashboard).
 - Dễ bắt đầu bằng emulator, sau đó thay thế bằng phần cứng thực.
 - Kiến trúc module hóa, tách ingestion / context / decision / action.
+- MCP/AI layer có thể triển khai theo từng bước: tool contract -> reasoning -> action policy.
+
+## 5.1 Trọng tâm build MVP: MCP + AI Agent
+- Mục tiêu chính: chứng minh **AI orchestration loop** hoạt động được trên context realtime.
+- Dashboard là lớp quan sát; lõi giá trị là năng lực tự động đề xuất/kích hoạt hành động có kiểm soát.
+- Rule baseline giúp an toàn; AI tăng chất lượng quyết định và khả năng giải thích.
 
 ## 6. Tính nhân văn và tính thuyết phục
 - Hỗ trợ phát hiện sớm nguy cơ ngập/chập/quá tải.

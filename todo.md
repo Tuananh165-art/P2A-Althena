@@ -1,200 +1,192 @@
-# TODO MVP - Matter x FIWARE x MCP (Tiếng Việt)
+# TODO KANBAN MVP (D1..D7) - Matter x FIWARE x MCP
 
-Tài liệu này tổng hợp **requirement, đầu việc, workflow step-by-step, roadmap, pipeline** để build và chạy project ở mức **MVP demo hackathon**.
-
----
-
-## 1) Mục tiêu MVP (đích cần đạt)
-
-## 1.1 Mục tiêu sản phẩm
-- Chạy end-to-end luồng:
-  **Device/Emulator -> FIMAT Agent -> FIWARE Orion -> Dashboard -> (MCP/AI đề xuất + action demo)**
-- Có ít nhất 1 kịch bản rủi ro (warning/critical) và 1 hành động demo thành công.
-
-## 1.2 Mục tiêu kỹ thuật
-- Hệ thống chạy ổn định 10 phút demo liên tục.
-- Có script start nhanh + smoke test.
-- Có docs đủ để người mới chạy được trong 20 phút.
-
-## 1.3 KPI tối thiểu
-- Sensor -> Alert latency <= 5 giây (mục tiêu MVP)
-- Action ACK success rate >= 90% (trong môi trường demo)
-- Không crash trong phiên demo
+> Mục tiêu: build được **MVP chạy thật** với trọng tâm **MCP + AI Agent orchestration** (không chỉ dashboard).
 
 ---
 
-## 2) Requirement tổng hợp
+## 0) North Star (Big Idea)
 
-## 2.1 Functional Requirements
-1. Ingest dữ liệu từ Matter emulator/thiết bị.
-2. Chuẩn hóa dữ liệu sang NGSI-v2 entity/attributes.
-3. Ghi/cập nhật dữ liệu lên Orion.
-4. Dashboard hiển thị trạng thái realtime.
-5. Cảnh báo theo ngưỡng (rule-based baseline).
-6. Có khả năng kích hoạt hành động demo (bật đèn/ngắt plug hoặc mock command).
-7. Ghi log + audit trail cho alert và action.
+**Resilience Copilot** = hệ điều phối ứng phó rủi ro theo thời gian gần thực:
+- Nhận context từ IoT (Matter/emulator)
+- Suy luận rủi ro bằng Rule + MCP/AI Agent
+- Kích hoạt hành động có kiểm soát (alert + command + ACK)
 
-## 2.2 Non-functional Requirements
-1. Độ ổn định demo cao, log gọn, không spam.
-2. Có fallback khi service/hardware lỗi.
-3. Không dùng dữ liệu cá nhân (PII).
-4. Có human-in-the-loop cho hành động nhạy cảm.
-
-## 2.3 Documentation Requirements
-- Có đủ các tài liệu trong `/docs`:
-  - README_HACKATHON, ARCHITECTURE, API_CONTRACT, ENTITY_MODEL,
-    DEMO_SCRIPT, TEST_REPORT, TEAM_ROLES, RISK_REGISTER.
-- README chính có link đầy đủ tới docs và scripts.
+**Một câu pitch:**
+> Từ “observe data” sang “orchestrate action” bằng context intelligence.
 
 ---
 
-## 3) Workflow triển khai step-by-step
+## 1) Definition of Done (MVP)
 
-## Bước 0 - Chuẩn bị môi trường
-- [ ] Cài Docker + Docker Compose
-- [ ] Cài Node.js
-- [ ] Clone repo
-- [ ] Kiểm tra port: 1026, 3000, 3001, 8080
-
-## Bước 1 - Dựng hạ tầng lõi
-- [ ] Chạy Orion + Mongo bằng `docker compose up -d`
-- [ ] Verify `http://localhost:1026/version`
-
-## Bước 2 - Chạy data pipeline
-- [ ] Chạy `matter-emulators`
-- [ ] Chạy `fimat-agent`
-- [ ] Chạy `proxy-server.js`
-- [ ] Chạy dashboard static server (8080)
-
-## Bước 3 - Kiểm tra nhanh (smoke test)
-- [ ] `GET /version` Orion = 200
-- [ ] `GET /version` Proxy = 200
-- [ ] `GET /health` FIMAT = ok
-- [ ] `GET /v2/entities` qua proxy = 200
-- [ ] Mở dashboard thành công
-
-## Bước 4 - Kiểm tra dữ liệu nghiệp vụ
-- [ ] Entity humidity có `measuredValue`
-- [ ] Entity smart plug có cả `onOff` + `activePower`
-- [ ] Timestamp/unit metadata đúng format
-
-## Bước 5 - Thiết lập logic cảnh báo
-- [ ] Rule warning/critical theo ngưỡng
-- [ ] Cooldown chống spam alert
-- [ ] Tạo risk summary (theo zone hoặc device)
-
-## Bước 6 - Action demo
-- [ ] Chọn action demo (đèn/plug)
-- [ ] Thực hiện command
-- [ ] Nhận ACK/ERROR và hiển thị trên UI/log
-
-## Bước 7 - Chuẩn bị demo
-- [ ] Chạy script scenario (`normal/warning/critical`)
-- [ ] Đo KPI tối thiểu
-- [ ] Chốt demo script 3-5 phút
-- [ ] Rehearsal ít nhất 2 vòng
+MVP chỉ được xem là DONE khi thỏa **đủ**:
+- [ ] End-to-end chạy: Device/Event -> FIMAT -> Orion -> MCP Agent -> Alert/Action -> Dashboard
+- [ ] Có ít nhất 2 mode risk (`warning`, `critical`)
+- [ ] Có ít nhất 1 command action thành công + ACK
+- [ ] `smoke-test` PASS 100%
+- [ ] Demo chạy ổn định >= 10 phút
+- [ ] Docs + scripts đủ để người mới chạy được <= 20 phút
 
 ---
 
-## 4) Pipeline kỹ thuật chuẩn
+## 2) Kanban theo ngày (D1..D7)
 
-1. **Ingestion Layer**
-   - Nhận event từ emulator/device
-   - Normalize payload
-2. **Context Layer**
-   - Upsert entity vào Orion
-   - Fallback append khi thiếu attribute
-3. **Decision Layer**
-   - Rule engine baseline (bắt buộc)
-   - MCP/AI reasoning (nâng cao)
-4. **Action Layer**
-   - Trigger command
-   - ACK/ERROR
-5. **Observability Layer**
-   - Log, health check, smoke test, audit trail
+## D1 - Foundation & Repo Hygiene
+**Mục tiêu ngày:** dựng hạ tầng sạch, thống nhất cấu trúc.
+
+### To Do
+- [ ] Chuẩn hóa cấu trúc repo (`docs/`, `scripts/`, `todo.md`, `CLAUDE.md`)
+- [ ] Xác nhận mọi link README/docs trỏ đúng đường dẫn thật
+- [ ] Chạy Orion + Mongo (`docker compose up -d`)
+- [ ] Verify health: `1026/version`
+
+### Deliverables
+- [ ] Repo không lệch path
+- [ ] Infra lên ổn định
 
 ---
 
-## 5) Roadmap MVP (7-10 ngày)
+## D2 - Data Pipeline ổn định
+**Mục tiêu ngày:** dữ liệu vào Orion đúng schema, không lỗi cơ bản.
 
-## Phase 1 (Ngày 1-2): Foundation
-- [ ] Chuẩn hóa cấu trúc repo/docs/scripts
-- [ ] Chạy end-to-end cơ bản
+### To Do
+- [ ] Chạy `matter-emulators`, `fimat-agent`, `proxy-server`, dashboard
+- [ ] Validate entity: humidity + smart plug (`onOff`, `activePower`)
+- [ ] Kiểm tra fallback append attrs (tránh 422)
+- [ ] Giảm log noise, giữ log signal
 
-## Phase 2 (Ngày 3-4): Risk + Alert
-- [ ] Hoàn thiện rule warning/critical
-- [ ] Tạo panel alert/timeline
+### Deliverables
+- [ ] Pipeline ingest/context chạy liên tục
+- [ ] Không còn lỗi block luồng dữ liệu
 
-## Phase 3 (Ngày 5-6): Action + Hardware bridge
-- [ ] Command action demo có ACK
-- [ ] Fallback mock command
+---
 
-## Phase 4 (Ngày 7): Demo hardening
-- [ ] KPI đo được
+## D3 - MCP Layer Design (Core day)
+**Mục tiêu ngày:** chốt contract MCP và control loop.
+
+### To Do
+- [ ] Chốt tool contracts MCP:
+  - [ ] `query_entities(...)`
+  - [ ] `compute_risk(...)`
+  - [ ] `publish_alert(...)`
+  - [ ] `invoke_command(...)`
+- [ ] Chốt policy: rule-first, human-in-the-loop cho action nhạy cảm
+- [ ] Chốt model output schema (riskLevel, riskScore, rationale)
+
+### Deliverables
+- [ ] `docs/API_CONTRACT.md` update MCP tools
+- [ ] `docs/ENTITY_MODEL.md` có `ZoneRisk`, `AlertEvent`, `CommandExecution`
+
+---
+
+## D4 - MCP Agent Build (Execution day)
+**Mục tiêu ngày:** MCP Agent chạy được với Orion và action pipeline.
+
+### To Do
+- [ ] Build MCP-FIWARE gateway/service
+- [ ] Nối MCP tools -> Orion query/update
+- [ ] Implement risk evaluation (rule baseline + AI reasoning)
+- [ ] Implement action path + ACK tracking
+
+### Deliverables
+- [ ] MCP agent chạy local
+- [ ] Có log quyết định + rationale
+
+---
+
+## D5 - Productize UI & Scenario
+**Mục tiêu ngày:** dashboard phục vụ demo, có kịch bản trình diễn rõ.
+
+### To Do
+- [ ] Dashboard panel: risk, alert timeline, action status
+- [ ] Nút/flow simulate (`normal`, `warning`, `critical`)
+- [ ] Hiển thị command ACK/ERROR
+- [ ] Chuẩn hóa demo script 3-5 phút
+
+### Deliverables
+- [ ] Demo flow mạch lạc nhìn thấy “AI + Context + Action”
+
+---
+
+## D6 - Test, Hardening, Failsafe
+**Mục tiêu ngày:** chống fail khi live demo.
+
+### To Do
+- [ ] Chạy full `smoke-test`
+- [ ] Test failure mode: Orion restart, hardware offline, duplicate events
+- [ ] Thêm cooldown/dedupe alert
+- [ ] Chuẩn bị fallback mock command + phương án backup
+
+### Deliverables
+- [ ] `docs/TEST_REPORT.md` có số liệu thật
+- [ ] `docs/RISK_REGISTER.md` cập nhật mitigation thực tế
+
+---
+
+## D7 - Pitch & Freeze
+**Mục tiêu ngày:** chốt bản thi.
+
+### To Do
 - [ ] Freeze demo branch
-- [ ] Tài liệu/pitch hoàn chỉnh
+- [ ] Chốt KPI scorecard (latency, action success, alert quality)
+- [ ] Dry-run pitch 2-3 vòng
+- [ ] Đảm bảo one-command setup + smoke pass
 
-(Thêm 2-3 ngày buffer nếu còn thời gian cho polishing)
+### Deliverables
+- [ ] Bản build demo ổn định
+- [ ] Storyline thuyết phục judge
 
 ---
 
-## 6) Checklist đồng bộ & chuẩn chỉnh trước khi chốt
+## 3) Backlog ưu tiên (sau D7 nếu còn giờ)
+- [ ] WebSocket realtime thay polling
+- [ ] Multi-zone heatmap
+- [ ] Notification channel (Telegram/Email)
+- [ ] Replay timeline mode
 
-## 6.1 Đồng bộ code/docs
-- [ ] README link đúng file thật
-- [ ] docs nằm đúng trong thư mục project
-- [ ] scripts nằm đúng trong `scripts/`
-- [ ] Không có file lạc vị trí gây `git status` rối
+---
 
-## 6.2 Đồng bộ contract dữ liệu
-- [ ] Entity ID naming nhất quán
-- [ ] Attribute key không đổi tùy hứng
-- [ ] Metadata timestamp/unit đầy đủ
+## 4) Pipeline chuẩn (bắt buộc không phá)
 
-## 6.3 Đồng bộ vận hành
-- [ ] `dev-up` chạy được
+1. **Ingestion:** device/emulator event -> normalize
+2. **Context:** upsert Orion entity/attrs
+3. **Decision:** rule baseline -> MCP/AI reasoning
+4. **Action:** publish alert + invoke command
+5. **Feedback:** ACK/ERROR + audit trail + UI update
+
+---
+
+## 5) Checklist chạy nhanh mỗi ngày
+- [ ] `dev-up` thành công
 - [ ] `smoke-test` PASS
-- [ ] `demo-scenario` hoạt động
+- [ ] `demo-scenario -Mode critical` phản ánh đúng trên dashboard
+- [ ] Không có lỗi blocker trong log
 
 ---
 
-## 7) Rủi ro chính và cách giảm thiểu
+## 6) Team Split (tick theo ngày)
 
-1. **Lệch cấu trúc repo/docs**
-   - Cách xử lý: chuẩn hóa path, commit cleanup ngay.
-2. **Xung đột port khi demo**
-   - Cách xử lý: kill tiến trình cũ trước khi start.
-3. **Alert spam/false positive**
-   - Cách xử lý: dedupe + cooldown window.
-4. **Hardware lỗi**
-   - Cách xử lý: có mock command fallback + video backup.
-5. **AI không ổn định**
-   - Cách xử lý: rule-first, AI chỉ tăng cường giải thích/đề xuất.
+## Software Team (MCP/AI/Agent/App)
+- [ ] D1: repo/docs/contracts
+- [ ] D2: pipeline + entity integrity
+- [ ] D3: MCP tool design
+- [ ] D4: MCP gateway + reasoning + action
+- [ ] D5: dashboard product demo
+- [ ] D6: test/hardening
+- [ ] D7: pitch support
 
----
-
-## 8) Team task split (gợi ý ngắn)
-
-## Team Software
-- [ ] FIMAT/Orion/proxy ổn định
-- [ ] Dashboard + risk/alert
-- [ ] MCP tool contracts + action pipeline
-- [ ] Smoke/regression test
-
-## Team Hardware
-- [ ] Thiết bị đèn/plug/sensor
-- [ ] Bridge command + ACK
-- [ ] Kiểm thử an toàn và fallback
+## Hardware Team (Device/IoT/Protocol)
+- [ ] D1: thiết bị + wiring + an toàn
+- [ ] D2: feed telemetry ổn định
+- [ ] D3: command contract (ACK/ERROR)
+- [ ] D4: bridge command software->device
+- [ ] D5: live action demo
+- [ ] D6: fallback khi hardware fail
+- [ ] D7: demo rehearsal
 
 ---
 
-## 9) Definition of Done (DoD) MVP
-
-MVP hoàn tất khi:
-- [ ] Flow end-to-end chạy ổn định
-- [ ] Có alert đúng ngữ cảnh
-- [ ] Có action thành công + ACK
-- [ ] Có script chạy nhanh + smoke test PASS
-- [ ] Có docs đầy đủ, người mới chạy được
-
----
+## 7) Nguyên tắc vận hành
+- Rule-first, AI-second
+- Human-in-the-loop cho action nhạy cảm
+- Mọi thay đổi contract phải update docs
+- Chỉ demo những gì đã test pass
