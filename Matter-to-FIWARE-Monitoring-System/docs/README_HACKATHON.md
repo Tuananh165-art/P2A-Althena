@@ -36,7 +36,49 @@
 - Có thể cứu tài sản và giảm rủi ro an toàn cho người dân.
 - Hướng tới hỗ trợ con người ra quyết định, không thay thế hoàn toàn con người.
 
-## 7. Tài liệu liên quan
+## 7. Judge FAQ (Innovation / Impact / Scalability)
+
+### Q1) Innovation của team là gì, khác gì dashboard IoT thông thường?
+**A:** Khác biệt cốt lõi là vòng lặp **Context -> Reasoning -> Action**:
+1. Matter/emulator đưa dữ liệu thiết bị vào FIWARE theo chuẩn ngữ nghĩa.
+2. MCP/AI Agent đọc context sống (không phải dữ liệu tĩnh) để đánh giá rủi ro.
+3. Hệ thống không chỉ hiển thị mà còn có thể tạo cảnh báo và kích hoạt hành động có kiểm soát.
+
+=> Đây là **AI điều phối vận hành** chứ không phải chatbot hay dashboard chỉ quan sát.
+
+### Q2) Impact thực tế đo bằng gì?
+**A:** Team tập trung vào KPI định lượng trong demo:
+- End-to-end latency (sensor -> alert)
+- Action success rate (command -> ACK)
+- Alert quality (giảm alert spam nhờ dedupe/cooldown)
+
+Impact xã hội:
+- Phát hiện sớm ngập/chập/quá tải cục bộ.
+- Hỗ trợ đội vận hành phản ứng nhanh hơn, giảm rủi ro tài sản và an toàn.
+
+### Q3) Scalability có thật không hay chỉ demo nhỏ?
+**A:** Có tính mở rộng theo kiến trúc:
+- Thêm thiết bị mới theo pattern entity/attribute chuẩn.
+- Thêm zone mới mà không phải viết lại toàn hệ thống.
+- Tách lớp ingestion/context/decision/action nên dễ scale độc lập.
+- Có thể mở rộng từ 1 nhà -> 1 tòa nhà -> nhiều khu vực.
+
+### Q4) Vì sao dùng Matter + FIWARE + MCP?
+**A:**
+- **Matter**: chuẩn liên thông thiết bị smart home.
+- **FIWARE Orion**: context broker mạnh cho digital twin runtime.
+- **MCP**: chuẩn hóa cách AI agent dùng tools/context/actions.
+
+Ba lớp này bổ sung nhau, tránh lock-in vào một vendor.
+
+### Q5) Nếu AI sai thì sao?
+**A:** Thiết kế theo nguyên tắc an toàn:
+- Rule-based là baseline bắt buộc.
+- AI là lớp nâng cao (giải thích + tối ưu đề xuất).
+- Hành động nhạy cảm có **human-in-the-loop**.
+- Có audit log để truy xuất “vì sao hệ thống quyết định như vậy”.
+
+## 8. Tài liệu liên quan
 - Master plan: `../HACKATHON_MVP_MASTER_PLAN.md`
 - Kiến trúc: `./ARCHITECTURE.md`
 - API contract: `./API_CONTRACT.md`
