@@ -1,5 +1,20 @@
 # Resilience Copilot Monitor (MVP)
 
+## 📌 Tài liệu định hướng nhanh
+
+- Master Plan (đầy đủ): `HACKATHON_MVP_MASTER_PLAN.md`
+- Hackathon docs index: `docs/README_HACKATHON.md`
+- Kiến trúc: `docs/ARCHITECTURE.md`
+- API contract: `docs/API_CONTRACT.md`
+- Entity model: `docs/ENTITY_MODEL.md`
+- Demo script: `docs/DEMO_SCRIPT.md`
+- Team roles: `docs/TEAM_ROLES.md`
+- Risk register: `docs/RISK_REGISTER.md`
+- Script chạy nhanh:
+  - `scripts/dev-up.ps1`
+  - `scripts/smoke-test.ps1`
+  - `scripts/demo-scenario.ps1`
+
 ## 1) Project này giải quyết bài toán gì?
 
 `Matter-to-FIWARE-Monitoring-System` là một hệ thống mô phỏng giám sát rủi ro thiên tai quy mô nhỏ (MVP), tập trung vào:
