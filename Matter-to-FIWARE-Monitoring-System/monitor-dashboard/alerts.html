@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerts — Climate Resilience Copilot</title>
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Alerts &amp; Commands</h1>
+        <p>Incident Timeline — Automated Actions &amp; Audit Trail</p>
+    </div>
+    <div class="status-bar">
+        <div class="status-item">
+            <span class="status-dot disconnected" id="orion-status"></span>
+            <span class="status-label">Orion</span>
+            <span id="orion-text">Checking...</span>
+        </div>
+        <div class="status-item">
+            <span class="status-dot disconnected" id="mcp-status"></span>
+            <span class="status-label">MCP Agent</span>
+            <span id="mcp-text">Checking...</span>
+        </div>
+    </div>
+
+    <!-- Info Panels -->
+    <div class="section">
+        <div id="info-panels"></div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="section">
+        <h3>Alert Timeline</h3>
+        <div class="filter-bar">
+            <select id="alert-filter" onchange="filterAlerts()">
+                <option value="all">All Levels</option>
+                <option value="critical">Critical</option>
+                <option value="warning">Warning</option>
+                <option value="normal">Normal</option>
+            </select>
+            <input type="text" id="alert-search" placeholder="Search alerts..." oninput="filterAlerts()">
+        </div>
+        <div class="alerts-container" id="alerts-container" style="max-height:600px"><p class="no-alerts">No alerts</p></div>
+    </div>
+
+    <!-- Commands -->
+    <div class="section">
+        <h3>Command Log</h3>
+        <div class="commands-container" id="commands-container" style="max-height:400px"><p class="no-data">No commands</p></div>
+    </div>
+</div>
+
+<script src="common.js"></script>
+<script src="nav.js"></script>
+<script src="alerts.js"></script>
+</body>
+</html>

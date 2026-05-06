@@ -1,26 +1,40 @@
 # HACKATHON MVP MASTER PLAN
 
-## Project Name (đề xuất)
-**Resilience Copilot: Matter x FIWARE x MCP for Disaster Response**
+## Project Name
+**Climate Resilience Copilot: AI-Powered Electrical Fire Detection**
 
 ---
 
-## 0) Executive Summary (Big Idea)
+## 0) Executive Summary
 
-### Big Idea
-Biến dữ liệu **smart home mức vi mô** (độ ẩm, điện năng, trạng thái thiết bị) thành **hành động ứng phó thiên tai theo thời gian gần thực** thông qua:
+### Bài toán cụ thể
+Biến đổi khí hậu gây nắng nóng cực đoan (35-40°C+) → nhu cầu điện tăng vọt (điều hòa, tải lạnh) → quá tải lưới điện → **chập cháy điện**.
 
-- **Matter** (chuẩn IoT thiết bị)
-- **FIWARE Orion** (context broker / digital twin runtime)
-- **MCP Agent** (AI orchestration: đọc context, suy luận rủi ro, kích hoạt action)
+Mối liên hệ rõ ràng:
+```
+Climate Change → Heat Wave → Electrical Overload → Wiring Overheat → Short Circuit → FIRE
+```
+
+Chập cháy điện là **nguyên nhân #1 gây cháy** tại các đô thị. Hệ thống giám sát hiện tại phản ứng quá chậm (phút đến giờ).
+
+### Giải pháp
+Nền tảng AI phát hiện rủi ro chập cháy điện **trong thời gian thực (<= 5 giây)** dựa trên mạng cảm biến IoT:
+
+- **Cảm biến nhiệt độ** → phát hiện quá tải nhiệt của dây dẫn
+- **Ổ cắm thông minh** → giám sát tải điện năng (W)
+- **Cảm biến độ ẩm** → phát hiện rủi ro đoản mạch do ẩm
+- **FIWARE Orion** → digital twin realtime
+- **MCP AI Agent** → suy luận rủi ro chập cháy bằng Rule + LLM
+- **Tự động ngắt tải** + cảnh báo khi phát hiện nguy hiểm
+
+### Mục tiêu cụ thể (measurable)
+- Phát hiện rủi ro chập cháy **<= 5 giây** từ khi sensor ghi nhận bất thường
+- Tự động ngắt tải + cảnh báo khi phát hiện nguy hiểm
+- **0 false negative** cho sự kiện critical (không bỏ sót mối đe dọa thật)
+- Demo: mô phỏng quá tải → hệ thống phát hiện → tự ngắt → ACK
 
 ### 1 câu chốt hackathon
-> Đây không phải chatbot hỏi-đáp; đây là **AI điều phối hành động** dựa trên context sống của hạ tầng IoT.
-
-### Tác động
-- Giảm độ trễ phát hiện sự cố cục bộ (ngập, ẩm cao, bất thường điện)
-- Hỗ trợ cảnh báo + đề xuất xử lý + trigger thiết bị (đèn, ổ cắm)
-- Là nền móng cho smart building / smart city resilience
+> AI phát hiện chập cháy điện do nắng nóng cực đoan trong 5 giây — trước khi cháy xảy ra.
 
 ---
 

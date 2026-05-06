@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map — Climate Resilience Copilot</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Smart City Map</h1>
+        <p>IoT Device Locations — Zone A Monitoring Area</p>
+    </div>
+    <div class="status-bar">
+        <div class="status-item">
+            <span class="status-dot disconnected" id="orion-status"></span>
+            <span class="status-label">Orion</span>
+            <span id="orion-text">Checking...</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Last update</span>
+            <span id="last-update">--</span>
+        </div>
+    </div>
+
+    <div class="section map-section">
+        <div class="map-controls">
+            <button class="btn-map" onclick="simulateDeviceMovement()">Simulate Movement</button>
+            <button class="btn-map" onclick="resetDevicePositions()">Reset Positions</button>
+            <span class="map-coord-display" id="map-coords">Click map for coordinates</span>
+        </div>
+        <div class="city-map" id="city-map"></div>
+        <div class="device-locations" id="device-locations"></div>
+    </div>
+</div>
+
+<script src="common.js"></script>
+<script src="nav.js"></script>
+<script src="map.js"></script>
+</body>
+</html>

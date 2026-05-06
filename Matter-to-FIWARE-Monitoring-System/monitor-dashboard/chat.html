@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat — Climate Resilience Copilot</title>
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>AI Assistant</h1>
+        <p>OpenClaw Skills — Fire Risk Queries, Device Control, System Status</p>
+    </div>
+    <div class="status-bar">
+        <div class="status-item">
+            <span class="status-dot disconnected" id="orion-status"></span>
+            <span class="status-label">Orion</span>
+            <span id="orion-text">Checking...</span>
+        </div>
+        <div class="status-item">
+            <span class="status-dot disconnected" id="mcp-status"></span>
+            <span class="status-label">MCP Agent</span>
+            <span id="mcp-text">Checking...</span>
+        </div>
+    </div>
+
+    <!-- Full-page Chat -->
+    <div class="chat-panel chat-fullpage" style="position:static;width:100%;height:calc(100vh - 220px);animation:none;">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-title">OpenClaw AI</div>
+                <div class="chat-subtitle">Climate Resilience Copilot — Electrical Fire Detection</div>
+            </div>
+        </div>
+        <div class="chat-quick-actions">
+            <button class="quick-action-btn" onclick="sendQuickAction('What is the fire risk level?')">Fire Risk</button>
+            <button class="quick-action-btn" onclick="sendQuickAction('Show recent alerts')">Alerts</button>
+            <button class="quick-action-btn" onclick="sendQuickAction('Check system status')">Health</button>
+            <button class="quick-action-btn" onclick="sendQuickAction('Simulate critical fire scenario')">Sim Fire</button>
+            <button class="quick-action-btn" onclick="sendQuickAction('Turn off the smart plug')">Emergency Off</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="chat-msg bot">
+                <div class="chat-msg-content">I detect electrical fire risk caused by climate change-driven heat waves. Ask me about:
+- Fire risk level for any zone
+- Recent alerts and incidents
+- Device control (smart plug on/off)
+- System health check
+- Run fire scenario simulation</div>
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Ask about fire risk, alerts, devices..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+            <button class="chat-send-btn" onclick="sendChatMessage()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="common.js"></script>
+<script src="nav.js"></script>
+<script src="chat.js"></script>
+</body>
+</html>

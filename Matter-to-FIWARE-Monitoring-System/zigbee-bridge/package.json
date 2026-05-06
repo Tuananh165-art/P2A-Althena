@@ -1,0 +1,19 @@
+{
+  "name": "zigbee-bridge",
+  "version": "1.0.0",
+  "description": "Zigbee-to-FIWARE bridge via zigbee2mqtt MQTT",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "dotenv": "^16.0.3",
+    "express": "^5.2.1",
+    "mqtt": "^5.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}

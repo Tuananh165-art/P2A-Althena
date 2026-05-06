@@ -48,6 +48,11 @@ module.exports = {
     'reactivePower': {
       type: 'Number',
       unit: 'VAr'
+    },
+    // Temperature Measurement Cluster (0x0402)
+    'temperature': {
+      type: 'Number',
+      unit: '°C'
     }
   }
 };

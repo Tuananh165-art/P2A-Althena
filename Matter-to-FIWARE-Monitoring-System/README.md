@@ -1,83 +1,106 @@
-# Resilience Copilot Monitor (MVP)
+# Climate Resilience Copilot (MVP)
 
 ## 1) Project này giải quyết bài toán gì?
 
-`Matter-to-FIWARE-Monitoring-System` là một hệ thống mô phỏng giám sát rủi ro thiên tai quy mô nhỏ (MVP), tập trung vào:
+**Bài toán cụ thể:** Nắng nóng cực đoan do biến đổi khí hậu → tiêu thụ điện tăng vọt (điều hòa, tải lạnh) → quá tải lưới → **chập cháy điện**. Mối liên hệ:
+```
+Climate Change → Heat Wave (35-40°C+) → Electrical Overload → Wiring Overheat → Short Circuit → FIRE
+```
 
-- **Thu thập dữ liệu cảm biến IoT theo ngữ nghĩa Matter** (độ ẩm, trạng thái thiết bị, công suất điện)
-- **Chuẩn hóa dữ liệu lên FIWARE Orion (NGSI-v2)**
-- **Hiển thị theo thời gian gần thực (near real-time) trên dashboard web**
-- **Làm nền cho cảnh báo sớm/ra quyết định vận hành**
+**Giải pháp:** `Climate Resilience Copilot` — nền tảng AI phát hiện rủi ro chập cháy điện **trong 5 giây**:
 
-Nói ngắn gọn: project giúp chứng minh luồng **thiết bị thông minh -> lớp tích hợp -> context broker -> giao diện giám sát** hoạt động đầy đủ.
+- **Cảm biến nhiệt độ** (°C) → phát hiện quá tải nhiệt dây dẫn — nguyên nhân trực tiếp gây cháy
+- **Ổ cắm thông minh** (W) → giám sát tải điện, phát hiện quá tải
+- **Cảm biến độ ẩm** (%RH) → phát hiện rủi ro đoản mạch do ẩm + điện
+- **FIWARE Orion** → digital twin realtime
+- **MCP AI Agent** → suy luận rủi ro chập cháy bằng Rule + LLM
+- **Tự động ngắt tải** + cảnh báo khi phát hiện nguy hiểm, 0 false negative
 
----
-
-## 2) Nhu cầu/vấn đề thực tế mà project đáp ứng
-
-## 2.1. Vấn đề dữ liệu IoT phân mảnh, khó tích hợp
-Trong thực tế, mỗi thiết bị có giao thức/format khác nhau. Điều này gây khó cho hệ thống giám sát tập trung.
-
-**Project giải quyết bằng cách:**
-- Dùng `FIMAT Agent` để chuyển event Matter sang chuẩn NGSI-v2
-- Đưa dữ liệu vào `FIWARE Orion` để tạo **single source of context**
-
-## 2.2. Thiếu môi trường thử nghiệm nhanh cho bài toán cảnh báo
-Triển khai thật trên thiết bị vật lý tốn thời gian và chi phí.
-
-**Project giải quyết bằng cách:**
-- Dùng `matter-emulators` tạo cảm biến giả lập
-- Cho phép test toàn bộ pipeline không cần phần cứng thực
-
-## 2.3. Khó quan sát trạng thái hệ thống theo thời gian thực
-Không có dashboard thì khó nhìn tổng quan, khó debug.
-
-**Project giải quyết bằng cách:**
-- `monitor-dashboard` gọi dữ liệu định kỳ mỗi 3 giây
-- Hiển thị trạng thái kết nối, danh sách entities, dữ liệu raw, cảnh báo độ ẩm
-
-## 2.4. Cần proof-of-concept cho kiến trúc Digital Twin/Context-aware
-Các dự án thành phố thông minh, tòa nhà thông minh, cảnh báo môi trường cần một nền context broker.
-
-**Project giải quyết bằng cách:**
-- Thể hiện được mô hình context entity (HumiditySensor, SmartPlug)
-- Có thể mở rộng sang thêm thiết bị, luật cảnh báo, automation
+**Mục tiêu cụ thể:** Phát hiện <= 5 giây, tự động ngắt tải, 0 false negative cho critical.
 
 ---
 
-## 3) Ứng dụng thực tiễn của project
+## 2) Bài toán cụ thể: Chập cháy điện do nắng nóng
 
-Project phù hợp cho các mục tiêu sau:
+## 2.1. Mối liên hệ Climate Change → Electrical Fire
+Biến đổi khí hậu → nắng nóng cực đoan (35-40°C+) → nhu cầu điện tăng vọt (điều hòa, tải lạnh) → quá tải lưới → **chập cháy điện**. Đây là nguyên nhân #1 gây cháy tại đô thị.
 
-1. **Demo kiến trúc IoT tích hợp FIWARE** cho học tập, nghiên cứu, POC doanh nghiệp.
-2. **Mô phỏng hệ giám sát rủi ro môi trường** (ngập, cháy, quá tải điện ở mức MVP).
-3. **Nền tảng phát triển tiếp** cho:
+**Project giải quyết bằng cách:**
+- Cảm biến nhiệt độ (°C) → phát hiện quá tải nhiệt dây dẫn
+- Ổ cắm thông minh (W) → giám sát tải điện thực tế
+- Cảm biến độ ẩm (%RH) → phát hiện rủi ro đoản mạch
+- AI kết hợp 3 chỉ số → đánh giá rủi ro chập cháy tổng hợp
+
+## 2.2. Hệ thống cảnh báo hiện tại phản ứng quá chậm
+Phát hiện quá tải/chập cháy thường dựa vào con người — mất vài phút đến vài giờ. Khi cháy xảy ra, đã quá muộn.
+
+**Project giải quyết bằng cách:**
+- Rule engine baseline + AI reasoning phát hiện rủi ro trong **<= 5 giây**
+- Tự động ngắt tải khi phát hiện nguy hiểm
+- End-to-end latency: Sensor (5s) → Orion → MCP Agent (5s poll) → Action
+
+## 2.3. Dữ liệu IoT phân mảnh, khó tích hợp
+Mỗi cảm biến có giao thức/format khác nhau. Không có single source of truth.
+
+**Project giải quyết bằng cách:**
+- FIMAT Agent chuyển event Matter → NGSI-v2
+- FIWARE Orion làm digital twin thống nhất
+- Mọi quyết định dựa trên context thống nhất
+
+## 2.4. Cần proof-of-concept cho Fire Detection Platform
+Các tòa nhà, khu công nghiệp, chung cư cần nền tảng phát hiện chập cháy tự động.
+
+**Project giải quyết bằng cách:**
+- Demo kiến trúc IoT + Context Broker + AI Agent hoàn chỉnh
+- 3 cảm biến: nhiệt độ, điện năng, độ ẩm → phát hiện chập cháy
+- Scalable: 1 nhà → 1 tòa nhà → 1 khu phố → 1 thành phố
+
+---
+
+## 3) Ứng dụng thực tiễn
+
+1. **Phát hiện chập cháy điện tự động** — giám sát nhiệt độ + điện năng + độ ẩm realtime
+2. **Cảnh báo quá tải khi nắng nóng** — phát hiện grid stress trước khi cháy
+3. **Compound hazard detection** — AI kết hợp nhiều chỉ số để đánh giá rủi ro tổng hợp
+4. **Tự động ngắt tải bảo vệ** — cắt điện khi phát hiện nguy hiểm, có ACK
+5. **Fire risk dashboard** — hiển thị realtime trạng thái rủi ro theo zone
+6. **Nền tảng mở rộng** cho:
+   - Thêm cảm biến khí gas, khói, mực nước
    - Cảnh báo đa kênh (Telegram/Zalo/SMS/Email)
-   - Rule engine nâng cao
-   - Lưu lịch sử + phân tích xu hướng
-   - Dashboard vận hành cho tòa nhà/kho/xưởng
-4. **Môi trường test API NGSI-v2** trước khi kết nối thiết bị thật.
+   - Phân tích xu hướng + dự báo
+   - Scale từ 1 tòa nhà đến 1 thành phố
 
 ---
 
-## 4) Bài toán nghiệp vụ cụ thể có thể triển khai từ project
+## 4) Fire Risk Scenarios cụ thể
 
-## 4.1. Cảnh báo ẩm cao (nguy cơ ngập/mốc)
-- Input: `measuredValue` từ HumiditySensor
-- Rule ví dụ:
-  - >80%: warning
-  - >90%: critical
-- Output: Cảnh báo trên dashboard + có thể mở rộng gửi thông báo
+## 4.1. Heat Wave Electrical Overload (Quá tải điện khi nắng nóng)
+- **Climate context:** Nắng nóng 40°C+ → nhu cầu điều hòa tăng vọt → quá tải mạch điện
+- **Input:** `temperature` (°C) + `activePower` (W) từ cảm biến
+- **Rule:**
+  - Temp >= 40°C + Power >= 800W: WARNING — heat wave causing grid stress
+  - Temp >= 50°C + Power >= 950W: CRITICAL — wiring overheat, imminent fire
+- **Output:** Cảnh báo + tự động ngắt tải + ACK
 
-## 4.2. Theo dõi tải điện thiết bị
-- Input: `onOff` và `activePower` từ SmartPlug
-- Rule ví dụ:
-  - Công suất cao kéo dài -> cảnh báo quá tải
-  - Bật/tắt bất thường -> cảnh báo hành vi lạ
+## 4.2. Wiring Overheat Detection (Quá tải nhiệt dây dẫn)
+- **Climate context:** Nhiệt độ môi trường cao + tải điện lớn → dây dẫn nóng → chảy cách điện
+- **Input:** `temperature` từ cảm biến nhiệt độ (đặt gần ổ cắm/dây dẫn)
+- **Rule:**
+  - Temp >= 45°C: WARNING — dây dẫn đang nóng bất thường
+  - Temp >= 55°C: CRITICAL — cách điện chảy, ngắn mạch sắp xảy ra
+- **Output:** Cắt điện ngay lập tức + cảnh báo + sơ tán zone
 
-## 4.3. Bản đồ trạng thái tài sản theo context entity
-- Mỗi thiết bị là một entity trong Orion
-- Truy vấn tập trung để lập báo cáo trạng thái theo thời gian
+## 4.3. Moisture + Power Short Circuit (Đoản mạch do ẩm)
+- **Climate context:** Độ ẩm cao (mưa, ngập) + tải điện lớn → đoản mạch
+- **Input:** `measuredValue` (%RH) + `activePower` (W)
+- **Rule:**
+  - Humidity >= 90% + Power >= 800W: CRITICAL — moisture-induced short circuit
+- **Output:** Cắt điện + cảnh báo + thông báo
+
+## 4.4. Smart City Fire Risk Map
+- Mỗi cảm biến là entity trong Orion với tọa độ GPS
+- Hiển thị bản đồ realtime: xanh (an toàn), vàng (cảnh báo), đỏ (nguy hiểm)
+- Mô phỏng di chuyển cảm biến, giả lập GPS
 
 ---
 

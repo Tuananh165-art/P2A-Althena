@@ -76,6 +76,7 @@ class SemanticProxy {
       0x0005: 'Scenes',
       0x0006: 'OnOffLight',
       0x0008: 'ColorDimmer',
+      0x0402: 'TemperatureSensor',
       0x0405: 'HumiditySensor',
       0x0B04: 'ElectricalMeasurement'
     };

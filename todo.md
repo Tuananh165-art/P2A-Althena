@@ -1,27 +1,42 @@
-# TODO KANBAN MVP (D1..D7) - Matter x FIWARE x MCP
+# TODO KANBAN MVP (D1..D7) — Electrical Fire Detection
 
-> Mục tiêu: build được **MVP chạy thật** với trọng tâm **MCP + AI Agent orchestration** (không chỉ dashboard).
+> Mục tiêu: build được **MVP chạy thật** với trọng tâm **AI phát hiện chập cháy điện do nắng nóng cực đoan**.
 
 ---
 
 ## 0) North Star (Big Idea)
 
-**Resilience Copilot** = hệ điều phối ứng phó rủi ro theo thời gian gần thực:
-- Nhận context từ IoT (Matter/emulator)
-- Suy luận rủi ro bằng Rule + MCP/AI Agent
-- Kích hoạt hành động có kiểm soát (alert + command + ACK)
+**Climate Resilience Copilot** = nền tảng AI phát hiện rủi ro chập cháy điện từ nắng nóng cực đoan theo thời gian thực:
+- Nhận dữ liệu từ IoT sensors: **nhiệt độ** (quá tải nhiệt), **điện năng** (quá tải lưới), **độ ẩm** (đoản mạch)
+- Suy luận rủi ro chập cháy bằng Rule + MCP/AI Agent
+- Tự động ngắt tải + cảnh báo khi phát hiện nguy hiểm (<= 5 giây)
 
 **Một câu pitch:**
-> Từ “observe data” sang “orchestrate action” bằng context intelligence.
+> AI phát hiện chập cháy điện do nắng nóng cực đoan trong 5 giây — trước khi cháy xảy ra.
+
+**Mối liên hệ rõ ràng:**
+```
+Climate Change → Heat Wave (35-40°C+)
+  → Electrical Overload (AC, cooling at max)
+  → Wiring Overheat + Insulation Degradation
+  → Short Circuit → ELECTRICAL FIRE
+```
+
+**Mục tiêu cụ thể:**
+- Phát hiện rủi ro chập cháy <= 5 giây
+- Tự động ngắt tải + cảnh báo
+- 0 false negative cho sự kiện critical
 
 ---
 
 ## 1) Definition of Done (MVP)
 
-MVP chỉ được xem là DONE khi thỏa **đủ**:
-- [ ] End-to-end chạy: Device/Event -> FIMAT -> Orion -> MCP Agent -> Alert/Action -> Dashboard
-- [ ] Có ít nhất 2 mode risk (`warning`, `critical`)
-- [ ] Có ít nhất 1 command action thành công + ACK
+MVP Climate Resilience chỉ được xem là DONE khi thỏa **đủ**:
+- [ ] End-to-end chạy: Climate Sensor -> FIMAT -> Orion -> MCP AI Agent -> Climate Response -> Dashboard
+- [ ] Phát hiện được ít nhất 2 loại rủi ro khí hậu: flood risk (humidity), grid stress (power)
+- [ ] Có ít nhất 1 climate response action thành công + ACK (ngắt tải, cảnh báo)
+- [ ] AI reasoner trả về climate-specific rationale (không phải generic)
+- [ ] Dashboard hiển thị climate hazard language + smart city map
 - [ ] `smoke-test` PASS 100%
 - [ ] Demo chạy ổn định >= 10 phút
 - [ ] Docs + scripts đủ để người mới chạy được <= 20 phút
@@ -34,13 +49,13 @@ MVP chỉ được xem là DONE khi thỏa **đủ**:
 **Mục tiêu ngày:** dựng hạ tầng sạch, thống nhất cấu trúc.
 
 ### To Do
-- [ ] Chuẩn hóa cấu trúc repo (`docs/`, `scripts/`, `todo.md`, `CLAUDE.md`)
-- [ ] Xác nhận mọi link README/docs trỏ đúng đường dẫn thật
+- [x] Chuẩn hóa cấu trúc repo (`docs/`, `scripts/`, `todo.md`, `CLAUDE.md`)
+- [x] Xác nhận mọi link README/docs trỏ đúng đường dẫn thật
 - [ ] Chạy Orion + Mongo (`docker compose up -d`)
 - [ ] Verify health: `1026/version`
 
 ### Deliverables
-- [ ] Repo không lệch path
+- [x] Repo không lệch path
 - [ ] Infra lên ổn định
 
 ---
@@ -64,17 +79,17 @@ MVP chỉ được xem là DONE khi thỏa **đủ**:
 **Mục tiêu ngày:** chốt contract MCP và control loop.
 
 ### To Do
-- [ ] Chốt tool contracts MCP:
-  - [ ] `query_entities(...)`
-  - [ ] `compute_risk(...)`
-  - [ ] `publish_alert(...)`
-  - [ ] `invoke_command(...)`
-- [ ] Chốt policy: rule-first, human-in-the-loop cho action nhạy cảm
-- [ ] Chốt model output schema (riskLevel, riskScore, rationale)
+- [x] Chốt tool contracts MCP:
+  - [x] `query_entities(...)`
+  - [x] `compute_risk(...)`
+  - [x] `publish_alert(...)`
+  - [x] `invoke_command(...)`
+- [x] Chốt policy: rule-first, human-in-the-loop cho action nhạy cảm
+- [x] Chốt model output schema (riskLevel, riskScore, rationale)
 
 ### Deliverables
-- [ ] `docs/API_CONTRACT.md` update MCP tools
-- [ ] `docs/ENTITY_MODEL.md` có `ZoneRisk`, `AlertEvent`, `CommandExecution`
+- [x] `docs/API_CONTRACT.md` update MCP tools
+- [x] `docs/ENTITY_MODEL.md` có `ZoneRisk`, `AlertEvent`, `CommandExecution`
 
 ---
 
@@ -82,14 +97,14 @@ MVP chỉ được xem là DONE khi thỏa **đủ**:
 **Mục tiêu ngày:** MCP Agent chạy được với Orion và action pipeline.
 
 ### To Do
-- [ ] Build MCP-FIWARE gateway/service
-- [ ] Nối MCP tools -> Orion query/update
-- [ ] Implement risk evaluation (rule baseline + AI reasoning)
-- [ ] Implement action path + ACK tracking
+- [x] Build MCP-FIWARE gateway/service
+- [x] Nối MCP tools -> Orion query/update
+- [x] Implement risk evaluation (rule baseline + AI reasoning)
+- [x] Implement action path + ACK tracking
 
 ### Deliverables
-- [ ] MCP agent chạy local
-- [ ] Có log quyết định + rationale
+- [x] MCP agent chạy local
+- [x] Có log quyết định + rationale
 
 ---
 
@@ -97,9 +112,9 @@ MVP chỉ được xem là DONE khi thỏa **đủ**:
 **Mục tiêu ngày:** dashboard phục vụ demo, có kịch bản trình diễn rõ.
 
 ### To Do
-- [ ] Dashboard panel: risk, alert timeline, action status
-- [ ] Nút/flow simulate (`normal`, `warning`, `critical`)
-- [ ] Hiển thị command ACK/ERROR
+- [x] Dashboard panel: risk, alert timeline, action status
+- [x] Nút/flow simulate (`normal`, `warning`, `critical`)
+- [x] Hiển thị command ACK/ERROR
 - [ ] Chuẩn hóa demo script 3-5 phút
 
 ### Deliverables
@@ -166,11 +181,11 @@ MVP chỉ được xem là DONE khi thỏa **đủ**:
 ## 6) Team Split (tick theo ngày)
 
 ## Software Team (MCP/AI/Agent/App)
-- [ ] D1: repo/docs/contracts
+- [x] D1: repo/docs/contracts
 - [ ] D2: pipeline + entity integrity
-- [ ] D3: MCP tool design
-- [ ] D4: MCP gateway + reasoning + action
-- [ ] D5: dashboard product demo
+- [x] D3: MCP tool design
+- [x] D4: MCP gateway + reasoning + action
+- [x] D5: dashboard product demo
 - [ ] D6: test/hardening
 - [ ] D7: pitch support
 

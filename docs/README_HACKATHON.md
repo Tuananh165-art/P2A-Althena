@@ -1,14 +1,18 @@
 # README_HACKATHON
 
 ## 1. Ý nghĩa của project
-**Resilience Copilot (Matter x FIWARE x MCP)** là một MVP giúp biến dữ liệu IoT trong nhà (độ ẩm, trạng thái ổ cắm, công suất) thành **quyết định ứng phó thiên tai theo thời gian gần thực**.
+**Climate Resilience Copilot** — nền tảng AI phát hiện chập cháy điện do nắng nóng cực đoan.
 
-Điểm khác biệt: không dừng ở giám sát, mà đi tới **cảnh báo + hành động**.
+**Bài toán cụ thể:** Nắng nóng do biến đổi khí hậu → tiêu thụ điện tăng vọt → quá tải lưới → **chập cháy điện**. Nguyên nhân #1 gây cháy đô thị.
+
+**Mối liên hệ:** Climate Change → Heat Wave → Electrical Overload → Wiring Overheat → Short Circuit → FIRE
+
+Điểm khác biệt: phát hiện rủi ro chập cháy **trong 5 giây** + tự động ngắt tải + 0 false negative.
 
 ## 2. Nhu cầu và bài toán giải quyết
-- Dữ liệu IoT phân tán, khó liên thông đa thiết bị/đa hãng.
-- Thiếu một lớp context thống nhất để phân tích theo zone.
-- Cảnh báo thường thủ công, phản ứng chậm.
+- Nắng nóng cực đoan ngày càng gia tăng → chập cháy điện tăng theo.
+- Hệ thống giám sát hiện tại phản ứng quá chậm (phút đến giờ).
+- Cần phát hiện trong giây, tự động ngắt tải trước khi cháy xảy ra.
 
 **Giải pháp:**
 - Matter/emulator -> FIMAT Agent -> Orion Context Broker -> MCP Agent -> Dashboard/thiết bị.

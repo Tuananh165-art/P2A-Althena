@@ -31,9 +31,14 @@ class FIMATAgent {
     try {
       // 1. Kiểm tra kết nối Orion
       console.log('\n[Step 1] Kiểm tra kết nối FIWARE Orion...');
-      const orionHealth = await this.orionClient.checkHealth();
+      let orionHealth = await this.orionClient.checkHealth();
       if (!orionHealth) {
-        throw new Error('Không thể kết nối đến FIWARE Orion');
+        console.warn('[FIMAT] Orion not available. Retrying in 5s...');
+        await new Promise(r => setTimeout(r, 5000));
+        orionHealth = await this.orionClient.checkHealth();
+        if (!orionHealth) {
+          console.warn('[FIMAT] Orion still unavailable. Starting in degraded mode.');
+        }
       }
 
       // 2. Khởi tạo Matter Controller
@@ -57,8 +62,8 @@ class FIMATAgent {
       console.log('\n✅ FIMAT Agent khởi động thành công!');
       console.log('═'.repeat(60) + '\n');
     } catch (error) {
-      console.error('\n❌ Lỗi khởi động FIMAT Agent:', error.message);
-      process.exit(1);
+      console.error('\n❌ Startup error:', error.message);
+      console.warn('[FIMAT] Continuing in degraded mode...');
     }
   }
 
@@ -108,34 +113,32 @@ class FIMATAgent {
    * Xử lý 1 event Matter
    */
   async handleMatterEvent(event) {
-    // 1. Chuyển đổi sự kiện Matter sang NGSI-v2
     const ngsiData = SemanticProxy.matterEventToNGSIEntity(event);
     const { entityId, deviceType, attributes } = ngsiData;
 
-    console.log(`\n📨 Sự kiện từ Matter [NodeID: ${event.nodeId}]`);
-    console.log(`  Attribute: ${event.attributeName} = ${event.attributeValue}`);
+    console.log(`\n📨 Event [NodeID: ${event.nodeId}] ${event.attributeName} = ${event.attributeValue}`);
 
-    const knownEntity = this.processedEntities.get(entityId);
+    try {
+      const knownEntity = this.processedEntities.get(entityId);
 
-    if (!knownEntity) {
-      const state = await this.ensureEntityExists(entityId, deviceType, attributes);
-      if (state === 'exists') {
-        console.log(`  ℹ️ Entity đã tồn tại, chuyển sang UPDATE`);
+      if (!knownEntity) {
+        const state = await this.ensureEntityExists(entityId, deviceType, attributes);
+        if (state === 'exists') {
+          const updatePayload = SemanticProxy.updateOrionPayload(attributes);
+          await this.orionClient.updateEntityAttributes(entityId, updatePayload);
+        }
+      } else {
         const updatePayload = SemanticProxy.updateOrionPayload(attributes);
         await this.orionClient.updateEntityAttributes(entityId, updatePayload);
       }
-    } else {
-      console.log(`  → Cập nhật Entity: ${entityId}`);
-      const updatePayload = SemanticProxy.updateOrionPayload(attributes);
-      await this.orionClient.updateEntityAttributes(entityId, updatePayload);
+
+      const cache = this.processedEntities.get(entityId) || { type: deviceType, attributes: {} };
+      Object.assign(cache.attributes, attributes);
+      this.processedEntities.set(entityId, cache);
+      console.log(`  -> Upserted to Orion`);
+    } catch (e) {
+      console.error(`  -> Orion error: ${e.message} (will retry next event)`);
     }
-
-    // Merge attributes vào cache
-    const cache = this.processedEntities.get(entityId) || { type: deviceType, attributes: {} };
-    Object.assign(cache.attributes, attributes);
-    this.processedEntities.set(entityId, cache);
-
-    console.log(`  ✅ Đã gửi lên Orion`);
   }
 
   /**

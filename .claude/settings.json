@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3002/tools/ai_chat\" -Method Post -ContentType \"application/json\" -Body '{\"message\":\"Why is the temperature dangerous right now?\"}')"
+    ]
+  }
+}

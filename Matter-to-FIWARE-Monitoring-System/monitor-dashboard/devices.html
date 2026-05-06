@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Climate Resilience Copilot — Dashboard</title>
+    <title>Devices — Climate Resilience Copilot</title>
     <link rel="stylesheet" href="common.css">
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>Climate Resilience Copilot</h1>
-        <p>AI-Powered Electrical Fire Detection — IoT x FIWARE x MCP</p>
+        <h1>Device Monitor</h1>
+        <p>IoT Sensor Telemetry — Matter/Thread via FIWARE Orion</p>
     </div>
-
     <div class="status-bar">
         <div class="status-item">
             <span class="status-dot disconnected" id="orion-status"></span>
@@ -20,30 +19,14 @@
             <span id="orion-text">Checking...</span>
         </div>
         <div class="status-item">
-            <span class="status-dot disconnected" id="mcp-status"></span>
-            <span class="status-label">MCP Agent</span>
-            <span id="mcp-text">Checking...</span>
-        </div>
-        <div class="status-item">
             <span class="status-label">Last update</span>
             <span id="last-update">--</span>
         </div>
     </div>
 
-    <!-- Risk Assessment -->
-    <div class="section risk-section">
-        <h3>Fire Risk Assessment</h3>
-        <div class="risk-zone-card normal" id="risk-zone-card">
-            <div class="risk-score-ring">
-                <div class="risk-score-value" id="risk-score-value">--</div>
-                <div class="risk-score-label">Score</div>
-            </div>
-            <div class="risk-details">
-                <div class="risk-level" id="risk-level">NO DATA</div>
-                <div class="risk-rationale" id="risk-rationale">Waiting for data...</div>
-                <div class="risk-actions" id="risk-actions"></div>
-            </div>
-        </div>
+    <!-- Info Panels -->
+    <div class="section">
+        <div id="info-panels"></div>
     </div>
 
     <!-- Device Cards -->
@@ -51,7 +34,7 @@
         <div class="device-card fire-risk">
             <div class="device-header">
                 <h2>Temperature Sensor</h2>
-                <span class="device-id">Node 3</span>
+                <span class="device-id">0x0402 &mdash; Node 3</span>
             </div>
             <div class="device-content">
                 <div class="metric">
@@ -66,7 +49,7 @@
         <div class="device-card">
             <div class="device-header">
                 <h2>Smart Plug</h2>
-                <span class="device-id">Node 2</span>
+                <span class="device-id">0x0006 + 0x0B04 &mdash; Node 2</span>
             </div>
             <div class="device-content">
                 <div class="metric">
@@ -84,7 +67,7 @@
         <div class="device-card">
             <div class="device-header">
                 <h2>Humidity Sensor</h2>
-                <span class="device-id">Node 1</span>
+                <span class="device-id">0x0405 &mdash; Node 1</span>
             </div>
             <div class="device-content">
                 <div class="metric">
@@ -98,32 +81,15 @@
         </div>
     </div>
 
-    <!-- Simulation -->
-    <div class="section simulate-section">
-        <h3>Simulation Control</h3>
-        <div class="simulate-buttons">
-            <button class="btn-simulate btn-normal" onclick="simulateScenario('normal')">Normal</button>
-            <button class="btn-simulate btn-warning" onclick="simulateScenario('warning')">Warning</button>
-            <button class="btn-simulate btn-critical" onclick="simulateScenario('critical')">Critical</button>
-            <button class="btn-simulate btn-evaluate" onclick="triggerEvaluate()">Force Evaluate</button>
-        </div>
-    </div>
-
-    <!-- Mini Alerts -->
+    <!-- Entities List -->
     <div class="section">
-        <h3>Recent Alerts</h3>
-        <div class="alerts-container" id="alerts-container"><p class="no-alerts">No alerts</p></div>
-    </div>
-
-    <!-- Mini Commands -->
-    <div class="section">
-        <h3>Recent Commands</h3>
-        <div class="commands-container" id="commands-container"><p class="no-data">No commands</p></div>
+        <h3>Orion Entities</h3>
+        <div class="entities-list" id="entities-list"><p class="loading">Loading...</p></div>
     </div>
 </div>
 
 <script src="common.js"></script>
 <script src="nav.js"></script>
-<script src="dashboard.js"></script>
+<script src="devices.js"></script>
 </body>
 </html>
