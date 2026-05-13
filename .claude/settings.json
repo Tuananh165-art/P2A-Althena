@@ -1,7 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3002/tools/ai_chat\" -Method Post -ContentType \"application/json\" -Body '{\"message\":\"Why is the temperature dangerous right now?\"}')"
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3002/tools/ai_chat\" -Method Post -ContentType \"application/json\" -Body '{\"message\":\"Why is the temperature dangerous right now?\"}')",
+      "PowerShell(Get-ChildItem -Path \"f:\\\\P2A-Althena\" -Recurse -Force -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -in @\\('.DS_Store','Thumbs.db'\\) -or $_.Extension -in @\\('.log','.tmp','.temp','.bak'\\) } | Select-Object -ExpandProperty FullName)",
+      "PowerShell(Get-ChildItem -Path \"f:\\\\P2A-Althena\" -Recurse -Force -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -in @\\('__pycache__','.pytest_cache','.mypy_cache','.ruff_cache','.cache','.nyc_output','coverage','.eslintcache','tmp','temp'\\) } | Select-Object -ExpandProperty FullName)",
+      "PowerShell($paths = @\\(\"F:\\\\P2A-Althena\\\\Matter-to-FIWARE-Monitoring-System\\\\matter-emulators\\\\output.log\",\"F:\\\\P2A-Althena\\\\Matter-to-FIWARE-Monitoring-System\\\\openclaw-gateway\\\\openclaw.log\",\"F:\\\\P2A-Althena\\\\Matter-to-FIWARE-Monitoring-System\\\\openclaw-gateway\\\\node_modules\\\\request\\\\node_modules\\\\form-data\\\\README.md.bak\"\\); $paths | ForEach-Object { \"$_ -> \" + \\(Test-Path $_\\) })",
+      "Bash(python -c \"import pypdf,sys; print\\('ok'\\)\")",
+      "Bash(python -c \"from pypdf import PdfReader; r=PdfReader\\(r'f:/P2A-Althena/ClimateResilience_DNTU_ResilienceCopilot_Roadmap.pdf'\\); print\\('pages',len\\(r.pages\\)\\);\\\\nimport textwrap\\\\nfor i,p in enumerate\\(r.pages[:20],1\\):\\\\n t=\\(p.extract_text\\(\\) or ''\\).replace\\('\\\\r',''\\);\\\\n print\\(f'\\\\\\\\n--- PAGE {i} ---\\\\\\\\n'+t[:2500]\\)\")",
+      "Bash(python -)",
+      "Bash(PYTHONIOENCODING=utf-8 python -)",
+      "Bash(python -c \"import reportlab; print\\('ok'\\)\")",
+      "Bash(python -c \"import fpdf; print\\('ok'\\)\")",
+      "Bash(python -c \"import fitz; print\\('ok'\\)\")",
+      "Bash(python -c \"import pdfplumber; print\\('ok'\\)\")",
+      "Bash(python -c \"from PIL import Image; print\\('ok'\\)\")",
+      "Bash(python \"f:/P2A-Althena/tmp_generate_roadmap_pdf.py\")"
     ]
   }
 }
