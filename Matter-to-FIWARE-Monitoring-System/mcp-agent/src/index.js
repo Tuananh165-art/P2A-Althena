@@ -272,7 +272,7 @@ if (require.main === module) {
   // AI Chat endpoint
   app.post('/tools/ai_chat', async (req, res) => {
     try {
-      const { message } = req.body;
+      const { message, skills, seedData } = req.body;
       if (!message) return res.status(400).json({ error: 'message is required' });
 
       const entities = await agent.orion.getEntities();
@@ -282,7 +282,23 @@ if (require.main === module) {
       const alertCount = agent.alertManager.getHistory(100).length;
 
       const result = await agent.aiReasoner.chat(message, {
-        risks, zones, deviceCount, alertCount
+        risks,
+        zones,
+        deviceCount,
+        alertCount,
+        skills: Array.isArray(skills) ? skills : [],
+        seedData: seedData || {
+          zone: 'A',
+          scenario: 'demo-building-main-area',
+          sensors: {
+            temperatureC: 36.8,
+            humidityPercent: 68,
+            activePowerW: 620,
+            smartPlug: 'ON'
+          },
+          services: ['Orion', 'MCP Agent', 'OpenClaw Gateway'],
+          note: 'Demo seed context only; live Orion data should override it when present.'
+        }
       });
       res.json(result);
     } catch (e) {

@@ -10,21 +10,26 @@ class AIReasoner {
     let endpoint = process.env.AI_ENDPOINT || '';
     this.apiKey = process.env.AI_API_KEY || '';
     this.model = process.env.AI_MODEL || 'gpt-4o-mini';
+    this.analysisEnabled = process.env.AI_ANALYZE_ENABLED === '1';
 
     if (endpoint && !endpoint.includes('/chat/completions')) {
-      endpoint = endpoint.replace(/\/+$/, '') + '/v1/chat/completions';
+      endpoint = endpoint.replace(/\/+$/, '');
+      endpoint += endpoint.endsWith('/v1') ? '/chat/completions' : '/v1/chat/completions';
     }
     this.endpoint = endpoint;
     this.enabled = !!(this.endpoint && this.apiKey);
     if (this.enabled) {
       console.log(`[AIReasoner] Enabled: ${this.model} via ${this.endpoint}`);
+      if (!this.analysisEnabled) {
+        console.log('[AIReasoner] Background risk analysis uses rules; AI is reserved for chat');
+      }
     } else {
       console.log('[AIReasoner] No AI endpoint configured, using rule-based reasoning');
     }
   }
 
   async analyzeRisk(metrics, ruleResult) {
-    if (!this.enabled) {
+    if (!this.enabled || !this.analysisEnabled) {
       return this.enhancedRuleReasoning(metrics, ruleResult);
     }
 
@@ -49,7 +54,7 @@ class AIReasoner {
             'Authorization': `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json'
           },
-          timeout: 20000
+          timeout: parseInt(process.env.AI_ANALYZE_TIMEOUT_MS) || 20000
         }
       );
 
@@ -106,15 +111,25 @@ Respond with JSON: {"rationale": "1-2 sentence electrical fire risk explanation"
 
     try {
       const lang = this.detectLanguage(userMessage);
-      const systemPrompt = `You are an Electrical Fire Risk AI Assistant for a climate resilience monitoring system. You analyze IoT sensor data (temperature, power, humidity) to detect fire risk from climate-driven heat waves.
+      const systemPrompt = `You are OpenClaw, a natural Telegram copilot for a climate resilience monitoring system. You help the operator understand electrical fire risk from climate-driven heat waves using IoT data: temperature, power, humidity, device state, alerts, and service health.
+
+Personality and style:
+- Sound like a capable teammate, not a command menu.
+- Reply naturally and briefly unless the user asks for detail.
+- If the user writes Vietnamese, reply in Vietnamese. If they write English, reply in English.
+- Use the live context first. If live data is missing, clearly say you are using demo seed context.
+- Do not invent exact sensor values beyond the provided context.
+- Mention available actions only when useful: risk check, alerts, system status, simulation, and smart plug control.
 
 Current system context:
 - Zones monitored: ${context.zones?.join(', ') || 'Zone A'}
 - Current risk data: ${JSON.stringify(context.risks || [])}
 - Active alerts: ${context.alertCount || 0}
 - Devices online: ${context.deviceCount || 0}
+- Available OpenClaw skills: ${JSON.stringify(context.skills || [])}
+- Demo seed context: ${JSON.stringify(context.seedData || {})}
 
-You MUST respond entirely in ${lang}. Be conversational, specific, and reference actual sensor values. Give actionable recommendations. Format nicely with markdown.`;
+You MUST respond entirely in ${lang}. Be conversational, specific, and reference actual sensor values when available. Give actionable recommendations. Format nicely with short markdown.`;
 
       const response = await axios.post(
         this.endpoint,
@@ -132,7 +147,7 @@ You MUST respond entirely in ${lang}. Be conversational, specific, and reference
             'Authorization': `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json'
           },
-          timeout: 20000
+          timeout: parseInt(process.env.AI_CHAT_TIMEOUT_MS) || 60000
         }
       );
 
@@ -146,6 +161,8 @@ You MUST respond entirely in ${lang}. Be conversational, specific, and reference
   }
 
   detectLanguage(text) {
+    const lowered = String(text || '').toLowerCase();
+    if (/\b(ban|toi|minh|rui ro|canh bao|trang thai|he thong|mo phong|o cam|chay)\b/.test(lowered)) return 'Vietnamese (Tieng Viet)';
     if (/[一-鿿]/.test(text)) return 'Chinese (中文)';
     if (/[Ѐ-ӿ]/.test(text)) return 'Russian (Русский)';
     if (/[가-힯]/.test(text)) return 'Korean (한국어)';
@@ -159,7 +176,14 @@ You MUST respond entirely in ${lang}. Be conversational, specific, and reference
     const msg = message.toLowerCase();
     const risks = context.risks || [];
     const lines = [];
-    const vi = lang.includes('Vietnamese');
+    const vi = lang.includes('Vietnamese') || /\b(ban|toi|minh|rui ro|canh bao|trang thai|he thong|mo phong|o cam|chay)\b/.test(msg);
+
+    if (msg.includes('what can you do') || msg.includes('help') || msg.includes('ban co the lam gi') || msg.includes('lam gi duoc')) {
+      if (vi) {
+        return 'Mình có thể theo dõi rủi ro cháy điện, tóm tắt cảnh báo, kiểm tra trạng thái hệ thống, chạy mô phỏng demo và điều khiển ổ cắm thông minh. Bạn có thể hỏi tự nhiên, ví dụ: "rủi ro hiện tại thế nào?", "có cảnh báo gì không?", hoặc "tắt ổ cắm".';
+      }
+      return 'I can monitor electrical fire risk, summarize alerts, check system health, run demo scenarios, and control the smart plug. You can ask naturally, for example: "What is the current risk?", "Any alerts?", or "Turn off the smart plug."';
+    }
 
     if (msg.includes('risk') || msg.includes('danger') || msg.includes('safe') || msg.includes('rủi ro') || msg.includes('nguy hiểm') || msg.includes('an toàn') || msg.includes('cháy')) {
       if (vi) {

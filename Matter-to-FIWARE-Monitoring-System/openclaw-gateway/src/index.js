@@ -91,13 +91,7 @@ function initExpress() {
 
   app.get('/skills', (req, res) => {
     res.json({
-      skills: [
-        { name: 'query-risk', trigger: 'risk, danger, safety, fire' },
-        { name: 'get-alerts', trigger: 'alerts, warnings, notifications' },
-        { name: 'device-control', trigger: 'turn on/off, switch, activate' },
-        { name: 'system-status', trigger: 'status, health, diagnostics' },
-        { name: 'simulate-scenario', trigger: 'simulate, demo, test' }
-      ]
+      skills: skillRouter.getSkills()
     });
   });
 

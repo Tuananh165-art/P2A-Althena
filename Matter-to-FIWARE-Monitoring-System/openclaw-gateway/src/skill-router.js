@@ -1,4 +1,6 @@
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 const config = require('../config');
 const fmt = require('./telegram-formatter');
 
@@ -6,35 +8,132 @@ const MCP_URL = config.mcp.url;
 const ORION_URL = config.orion.url;
 const FIMAT_URL = config.fimat.url;
 const ZIGBEE_URL = config.zigbee.url;
+const SKILLS_DIR = process.env.OPENCLAW_SKILLS_DIR ||
+  path.resolve(__dirname, '..', '..', '..', 'openclaw-skills');
+
+const VIETNAMESE_TRIGGERS = {
+  'query-risk': ['rủi ro', 'rui ro', 'nguy cơ', 'nguy co', 'nguy hiểm', 'nguy hiem', 'cháy', 'chay', 'an toàn', 'an toan'],
+  'get-alerts': ['cảnh báo', 'canh bao', 'thông báo', 'thong bao', 'sự cố', 'su co', 'lịch sử', 'lich su'],
+  'device-control': ['bật', 'bat', 'tắt', 'tat', 'điều khiển', 'dieu khien', 'ổ cắm', 'o cam', 'đèn cảnh báo', 'den canh bao'],
+  'system-status': ['trạng thái', 'trang thai', 'hệ thống', 'he thong', 'sức khỏe', 'suc khoe', 'kiểm tra', 'kiem tra'],
+  'simulate-scenario': ['mô phỏng', 'mo phong', 'giả lập', 'gia lap', 'demo', 'thử nghiệm', 'thu nghiem', 'kịch bản', 'kich ban']
+};
+
+function parseSkillFile(filePath) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!match) return null;
+
+  const meta = {};
+  for (const line of match[1].split(/\r?\n/)) {
+    const index = line.indexOf(':');
+    if (index === -1) continue;
+    const key = line.slice(0, index).trim();
+    const value = line.slice(index + 1).trim();
+    meta[key] = value;
+  }
+
+  if (!meta.name) return null;
+  const triggers = (meta.trigger || '')
+    .split(',')
+    .map(t => t.trim().toLowerCase())
+    .filter(Boolean);
+
+  return {
+    name: meta.name,
+    description: meta.description || '',
+    triggers: [...triggers, ...(VIETNAMESE_TRIGGERS[meta.name] || [])],
+    file: path.basename(filePath)
+  };
+}
+
+function loadSkills() {
+  try {
+    return fs.readdirSync(SKILLS_DIR)
+      .filter(file => file.endsWith('.md') && file.toLowerCase() !== 'skills.md')
+      .map(file => parseSkillFile(path.join(SKILLS_DIR, file)))
+      .filter(Boolean);
+  } catch (e) {
+    console.warn(`[OpenClaw] Could not load external skills from ${SKILLS_DIR}: ${e.message}`);
+    return [];
+  }
+}
+
+const loadedSkills = loadSkills();
+console.log(`[OpenClaw] Loaded ${loadedSkills.length} external skill(s) from ${SKILLS_DIR}`);
+
+function getSkill(name) {
+  return loadedSkills.find(skill => skill.name === name);
+}
 
 function matchKeywords(text, keywords) {
-  return keywords.some(k => text.includes(k));
+  const normalizedText = normalizeText(text);
+  return keywords.some(k => normalizedText.includes(normalizeText(k)));
+}
+
+function normalizeText(text) {
+  return String(text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
+}
+
+function matchSkill(text, name) {
+  const skill = getSkill(name);
+  return skill && matchKeywords(text, skill.triggers);
 }
 
 async function route(message) {
-  const msg = message.toLowerCase().trim();
+  const msg = normalizeText(message).trim();
 
-  if (matchKeywords(msg, ['risk', 'danger', 'safety', 'fire', 'zone status', 'how safe'])) {
-    return await skillQueryRisk(msg);
-  }
-
-  if (matchKeywords(msg, ['alert', 'warning', 'incident', 'notification', 'what happened'])) {
-    return await skillGetAlerts(msg);
-  }
-
-  if (matchKeywords(msg, ['turn on', 'turn off', 'switch on', 'switch off', 'activate', 'deactivate', 'control', 'plug on', 'plug off'])) {
+  if (matchSkill(msg, 'device-control')) {
     return await skillDeviceControl(msg);
   }
 
-  if (matchKeywords(msg, ['status', 'health', 'system check', 'diagnostics', 'how is everything'])) {
-    return await skillSystemStatus();
-  }
-
-  if (matchKeywords(msg, ['simulate', 'demo', 'test scenario', 'run demo', 'what if'])) {
+  if (matchSkill(msg, 'simulate-scenario')) {
     return await skillSimulate(msg);
   }
 
-  return { text: fmt.formatHelp(), skill: 'help' };
+  return await skillAIChat(message);
+}
+
+function toTelegramHtml(text) {
+  return fmt.escapeHtml(text)
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/\*(.*?)\*/g, '<i>$1</i>')
+    .replace(/\r\n/g, '\n');
+}
+
+async function skillAIChat(message) {
+  try {
+    const { data: result } = await axios.post(`${MCP_URL}/tools/ai_chat`, {
+      message,
+      skills: getSkills(),
+      seedData: {
+        zone: 'A',
+        scenario: 'demo-building-main-area',
+        sensors: {
+          temperatureC: 36.8,
+          humidityPercent: 68,
+          activePowerW: 620,
+          smartPlug: 'ON'
+        },
+        actions: ['risk check', 'alerts', 'system status', 'simulation', 'smart plug control']
+      }
+    }, { timeout: 65000 });
+
+    return {
+      text: toTelegramHtml(result.text || fmt.formatHelp(loadedSkills)),
+      skill: result.source === 'ai' ? 'ai-chat' : 'rules-chat'
+    };
+  } catch (e) {
+    console.error(`[OpenClaw] AI chat failed: ${e.message}`);
+    return {
+      text: 'Mình nghe được, nhưng kênh AI đang chậm. Bạn có thể hỏi nhanh: "rui ro", "canh bao", "trang thai he thong", "mo phong critical", hoặc "tat o cam".',
+      skill: 'help'
+    };
+  }
 }
 
 async function skillQueryRisk(msg) {
@@ -54,8 +153,9 @@ async function skillGetAlerts(msg) {
 
 async function skillDeviceControl(msg) {
   let action, deviceId, deviceName;
+  msg = normalizeText(msg);
 
-  if (msg.includes('plug') || msg.includes('switch')) {
+  if (msg.includes('plug') || msg.includes('switch') || msg.includes('o cam')) {
     deviceId = 'urn:ngsi-ld:MatterDevice:2_1';
     deviceName = 'Smart Plug';
   } else {
@@ -65,9 +165,9 @@ async function skillDeviceControl(msg) {
     };
   }
 
-  if (msg.includes('turn on') || msg.includes('switch on') || msg.includes('activate')) {
+  if (msg.includes('turn on') || msg.includes('switch on') || msg.includes('activate') || msg.includes('bat')) {
     action = 'TURN_ON';
-  } else if (msg.includes('turn off') || msg.includes('switch off') || msg.includes('deactivate')) {
+  } else if (msg.includes('turn off') || msg.includes('switch off') || msg.includes('deactivate') || msg.includes('tat')) {
     action = 'TURN_OFF';
   } else {
     return {
@@ -135,4 +235,13 @@ async function skillSimulate(msg) {
   };
 }
 
-module.exports = { route };
+function getSkills() {
+  return loadedSkills.map(skill => ({
+    name: skill.name,
+    description: skill.description,
+    trigger: skill.triggers.join(', '),
+    file: skill.file
+  }));
+}
+
+module.exports = { route, getSkills };

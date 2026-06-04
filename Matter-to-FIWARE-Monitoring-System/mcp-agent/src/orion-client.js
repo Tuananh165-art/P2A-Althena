@@ -10,6 +10,35 @@ class OrionClient {
     });
   }
 
+  sanitizeString(value) {
+    if (typeof value !== 'string') return value;
+    // Orion can reject some non-ASCII/mojibake characters in attribute values.
+    // Keep payloads portable by normalizing common symbols and stripping controls.
+    return value
+      .replace(/\r\n/g, '\n')
+      .replace(/[\u2012\u2013\u2014\u2015]/g, '-')
+      .replace(/\u00B0/g, ' deg')
+      .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '')
+      .trim();
+  }
+
+  sanitizePayload(input) {
+    if (Array.isArray(input)) {
+      return input.map(item => this.sanitizePayload(item));
+    }
+    if (input && typeof input === 'object') {
+      const out = {};
+      for (const [key, value] of Object.entries(input)) {
+        out[key] = this.sanitizePayload(value);
+      }
+      return out;
+    }
+    if (typeof input === 'string') {
+      return this.sanitizeString(input);
+    }
+    return input;
+  }
+
   async getEntities(type) {
     let url = '/v2/entities?limit=1000';
     if (type) url += `&type=${type}`;
@@ -28,20 +57,22 @@ class OrionClient {
   }
 
   async createEntity(id, type, attrs) {
-    const res = await this.client.post('/v2/entities', { id, type, ...attrs }, {
+    const safeAttrs = this.sanitizePayload(attrs);
+    const res = await this.client.post('/v2/entities', { id, type, ...safeAttrs }, {
       headers: { 'Content-Type': 'application/json' }
     });
     return res.data;
   }
 
   async updateEntity(id, attrs) {
+    const safeAttrs = this.sanitizePayload(attrs);
     try {
-      await this.client.patch(`/v2/entities/${id}/attrs`, attrs, {
+      await this.client.patch(`/v2/entities/${id}/attrs`, safeAttrs, {
         headers: { 'Content-Type': 'application/json' }
       });
     } catch (e) {
       if (e.response?.status === 422) {
-        await this.client.post(`/v2/entities/${id}/attrs?options=append`, attrs, {
+        await this.client.post(`/v2/entities/${id}/attrs?options=append`, safeAttrs, {
           headers: { 'Content-Type': 'application/json' }
         });
       } else if (e.response?.status === 404) {

@@ -135,6 +135,22 @@ function formatHelp() {
     `<i>Try: risk, alerts, status, simulate, turn on/off</i>`;
 }
 
+function formatSkillHelp(skills = []) {
+  if (skills.length) {
+    let msg = `<b>Climate Resilience Copilot - OpenClaw</b>\n\n`;
+    msg += `Loaded skills: <b>${skills.length}</b>\n\n`;
+    msg += `<b>Available commands:</b>\n`;
+    skills.forEach(skill => {
+      const trigger = skill.triggers?.slice(0, 4).join(', ') || skill.trigger || '';
+      msg += `- <b>${escapeHtml(skill.name)}:</b> ${escapeHtml(trigger)}\n`;
+    });
+    msg += `\n<i>Thu: rui ro, canh bao, trang thai, mo phong, bat/tat o cam</i>`;
+    return msg;
+  }
+
+  return formatHelp();
+}
+
 module.exports = {
   formatRisk,
   formatAlerts,
@@ -142,7 +158,7 @@ module.exports = {
   formatDeviceControl,
   formatSystemStatus,
   formatSimulate,
-  formatHelp,
+  formatHelp: formatSkillHelp,
   escapeHtml,
   LEVEL_EMOJI
 };

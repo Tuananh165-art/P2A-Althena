@@ -1,4 +1,5 @@
 const http = require('http');
+const VERBOSE_PROXY = process.env.PROXY_VERBOSE === '1';
 
 // CORS proxy for Orion context broker
 const proxy = http.createServer((req, res) => {
@@ -19,7 +20,9 @@ const proxy = http.createServer((req, res) => {
   const allowVersion = req.method === 'GET' && req.url === '/version';
 
   if (allowPrefix || allowVersion) {
-    console.log(`Proxying ${req.method} ${req.url} to http://localhost:1026${req.url}`);
+    if (VERBOSE_PROXY) {
+      console.log(`Proxying ${req.method} ${req.url} to http://localhost:1026${req.url}`);
+    }
 
     const options = {
       hostname: 'localhost',
@@ -54,6 +57,9 @@ const PORT = 3001;
 proxy.listen(PORT, '0.0.0.0', () => {
   console.log('CORS Proxy Server listening on port ' + PORT);
   console.log('Proxying /version and /v2/* to http://localhost:1026');
+  if (!VERBOSE_PROXY) {
+    console.log('Per-request logging is disabled (set PROXY_VERBOSE=1 to enable).');
+  }
 });
 
 proxy.on('error', (error) => {

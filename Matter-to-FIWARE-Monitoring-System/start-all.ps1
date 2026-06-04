@@ -5,6 +5,10 @@ $basePath = $PSScriptRoot
 $proxyFile = Join-Path $basePath 'proxy-server.js'
 $emulatorsDir = Join-Path $basePath 'matter-emulators'
 $dashboardDir = Join-Path $basePath 'monitor-dashboard'
+$mcpAgentDir = Join-Path $basePath 'mcp-agent'
+$openClawDir = Join-Path $basePath 'openclaw-gateway'
+$dashboardPort = 8001
+$dashboardUrl = "http://localhost:$dashboardPort"
 
 if (-not (Test-Path $proxyFile)) {
     Write-Host "Missing file: $proxyFile" -ForegroundColor Red
@@ -18,6 +22,14 @@ if (-not (Test-Path $dashboardDir)) {
     Write-Host "Missing folder: $dashboardDir" -ForegroundColor Red
     exit 1
 }
+if (-not (Test-Path $mcpAgentDir)) {
+    Write-Host "Missing folder: $mcpAgentDir" -ForegroundColor Red
+    exit 1
+}
+if (-not (Test-Path $openClawDir)) {
+    Write-Host "Missing folder: $openClawDir" -ForegroundColor Red
+    exit 1
+}
 
 # Kill existing node processes
 Write-Host 'Stopping old Node processes...' -ForegroundColor Yellow
@@ -27,6 +39,7 @@ Start-Sleep -Seconds 2
 # Start Orion + Mongo via Docker Compose
 Write-Host 'Starting Orion + Mongo via docker compose...' -ForegroundColor Yellow
 Push-Location $basePath
+docker compose rm -sf orion
 docker compose up -d
 Pop-Location
 
@@ -59,14 +72,28 @@ Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location 
 
 Start-Sleep -Seconds 2
 
+# Start MCP Agent in background
+Write-Host 'Starting MCP Agent (port 3002)...' -ForegroundColor Cyan
+Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location '$mcpAgentDir'; npm start" -WindowStyle Normal
+
+Start-Sleep -Seconds 2
+
+# Start OpenClaw Gateway in background
+Write-Host 'Starting OpenClaw Gateway (port 3004)...' -ForegroundColor Cyan
+Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location '$openClawDir'; npm start" -WindowStyle Normal
+
+Start-Sleep -Seconds 2
+
 # Start Dashboard HTTP Server in background
-Write-Host 'Starting Dashboard (port 8000)...' -ForegroundColor Cyan
-Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location '$dashboardDir'; npx http-server -p 8000" -WindowStyle Normal
+Write-Host "Starting Dashboard (port $dashboardPort)..." -ForegroundColor Cyan
+Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location '$dashboardDir'; npx http-server -a localhost -p $dashboardPort" -WindowStyle Normal
 
 Write-Host "`nAll services started.`n" -ForegroundColor Green
-Write-Host 'Dashboard: http://localhost:8000' -ForegroundColor Cyan
+Write-Host "Dashboard: $dashboardUrl" -ForegroundColor Cyan
 Write-Host 'Proxy: http://localhost:3001' -ForegroundColor Cyan
 Write-Host 'Orion: http://localhost:1026' -ForegroundColor Cyan
+Write-Host 'MCP Agent: http://localhost:3002/health' -ForegroundColor Cyan
+Write-Host 'OpenClaw Gateway: http://localhost:3004/health' -ForegroundColor Cyan
 Write-Host "`nWaiting 10 seconds for services to warm up..." -ForegroundColor Yellow
 Start-Sleep -Seconds 10
 
@@ -75,6 +102,8 @@ Write-Host "`nChecking connectivity..." -ForegroundColor Yellow
 
 $proxyTest = $false
 $orionTest = $false
+$mcpTest = $false
+$openClawTest = $false
 
 try {
     $response = Invoke-WebRequest -Uri 'http://localhost:3001/version' -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
@@ -96,8 +125,28 @@ try {
     Write-Host 'Orion: FAILED' -ForegroundColor Red
 }
 
-if ($proxyTest -and $orionTest) {
-    Write-Host "`nAll services are running. Open: http://localhost:8000" -ForegroundColor Green
+try {
+    $response = Invoke-WebRequest -Uri 'http://localhost:3002/health' -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
+    if ($response.StatusCode -eq 200) {
+        Write-Host 'MCP Agent: OK' -ForegroundColor Green
+        $mcpTest = $true
+    }
+} catch {
+    Write-Host 'MCP Agent: FAILED' -ForegroundColor Red
+}
+
+try {
+    $response = Invoke-WebRequest -Uri 'http://localhost:3004/health' -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
+    if ($response.StatusCode -eq 200) {
+        Write-Host 'OpenClaw Gateway: OK' -ForegroundColor Green
+        $openClawTest = $true
+    }
+} catch {
+    Write-Host 'OpenClaw Gateway: FAILED' -ForegroundColor Red
+}
+
+if ($proxyTest -and $orionTest -and $mcpTest -and $openClawTest) {
+    Write-Host "`nAll services are running. Open: $dashboardUrl" -ForegroundColor Green
 } else {
     Write-Host "`nSome services failed. Check the opened console windows." -ForegroundColor Yellow
 }
