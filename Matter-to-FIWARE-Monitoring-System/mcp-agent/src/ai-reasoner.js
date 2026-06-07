@@ -93,7 +93,7 @@ Respond with JSON: {"rationale": "1-2 sentence electrical fire risk explanation"
       const parsed = JSON.parse(jsonMatch[0]);
 
       return {
-        rationale: parsed.rationale || ruleResult.rationale,
+        rationale: this.stripMarkdownBold(parsed.rationale || ruleResult.rationale),
         recommendedActions: parsed.recommendedActions || ruleResult.recommendedActions,
         confidence: parsed.confidence || 0.8,
         source: 'ai'
@@ -120,6 +120,7 @@ Personality and style:
 - Use the live context first. If live data is missing, clearly say you are using demo seed context.
 - Do not invent exact sensor values beyond the provided context.
 - Mention available actions only when useful: risk check, alerts, system status, simulation, and smart plug control.
+- Do not wrap text in double asterisks for markdown bold. Keep the response as plain natural text.
 
 Current system context:
 - Zones monitored: ${context.zones?.join(', ') || 'Zone A'}
@@ -129,7 +130,7 @@ Current system context:
 - Available OpenClaw skills: ${JSON.stringify(context.skills || [])}
 - Demo seed context: ${JSON.stringify(context.seedData || {})}
 
-You MUST respond entirely in ${lang}. Be conversational, specific, and reference actual sensor values when available. Give actionable recommendations. Format nicely with short markdown.`;
+You MUST respond entirely in ${lang}. Be conversational, specific, and reference actual sensor values when available. Give actionable recommendations. Use plain text with short lines or simple bullet points only.`;
 
       const response = await axios.post(
         this.endpoint,
@@ -152,7 +153,7 @@ You MUST respond entirely in ${lang}. Be conversational, specific, and reference
       );
 
       const choice = response.data.choices?.[0]?.message;
-      const text = choice?.content || choice?.reasoning_content || 'No response from AI.';
+      const text = this.stripMarkdownBold(choice?.content || choice?.reasoning_content || 'No response from AI.');
       return { text, source: 'ai' };
     } catch (e) {
       console.error(`[AIReasoner] Chat API error: ${e.message}, falling back to rules`);
@@ -170,6 +171,10 @@ You MUST respond entirely in ${lang}. Be conversational, specific, and reference
     // Vietnamese diacritics
     if (/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(text)) return 'Vietnamese (Tiếng Việt)';
     return 'English';
+  }
+
+  stripMarkdownBold(text) {
+    return String(text || '').replace(/\*\*(.*?)\*\*/g, '$1');
   }
 
   ruleBasedChat(message, context, lang = 'English') {

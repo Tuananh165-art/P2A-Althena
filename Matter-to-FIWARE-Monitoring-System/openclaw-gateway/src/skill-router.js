@@ -100,7 +100,7 @@ async function route(message) {
 
 function toTelegramHtml(text) {
   return fmt.escapeHtml(text)
-    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/\*(.*?)\*/g, '<i>$1</i>')
     .replace(/\r\n/g, '\n');
 }
