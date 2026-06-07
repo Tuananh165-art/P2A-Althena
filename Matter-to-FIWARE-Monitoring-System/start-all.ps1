@@ -7,6 +7,7 @@ $emulatorsDir = Join-Path $basePath 'matter-emulators'
 $dashboardDir = Join-Path $basePath 'monitor-dashboard'
 $mcpAgentDir = Join-Path $basePath 'mcp-agent'
 $openClawDir = Join-Path $basePath 'openclaw-gateway'
+$openClawSkillsDir = Join-Path (Split-Path $basePath -Parent) 'openclaw-skills'
 $dashboardPort = 8001
 $dashboardUrl = "http://localhost:$dashboardPort"
 
@@ -28,6 +29,10 @@ if (-not (Test-Path $mcpAgentDir)) {
 }
 if (-not (Test-Path $openClawDir)) {
     Write-Host "Missing folder: $openClawDir" -ForegroundColor Red
+    exit 1
+}
+if (-not (Test-Path $openClawSkillsDir)) {
+    Write-Host "Missing folder: $openClawSkillsDir" -ForegroundColor Red
     exit 1
 }
 
@@ -80,7 +85,7 @@ Start-Sleep -Seconds 2
 
 # Start OpenClaw Gateway in background
 Write-Host 'Starting OpenClaw Gateway (port 3004)...' -ForegroundColor Cyan
-Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location '$openClawDir'; npm start" -WindowStyle Normal
+Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "`$env:OPENCLAW_SKILLS_DIR='$openClawSkillsDir'; Set-Location '$openClawDir'; npm start" -WindowStyle Normal
 
 Start-Sleep -Seconds 2
 
