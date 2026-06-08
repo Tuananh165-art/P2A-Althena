@@ -1,0 +1,1142 @@
+[
+  {
+    "id": "Zone:floor1",
+    "type": "Zone",
+    "totalActivePower": {
+      "value": 376.92388790684436,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "voltageDrop": {
+      "value": 3.5217903600628375,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "riskLevel": {
+      "value": "high",
+      "type": "Text"
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:44.743Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "TemperatureSensor:room-12",
+    "type": "TemperatureSensor",
+    "temperature": {
+      "value": 27.4,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "C"
+        }
+      }
+    },
+    "battery": {
+      "value": 76,
+      "type": "Integer",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:44.743Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "TemperatureSensor:outdoor-01",
+    "type": "TemperatureSensor",
+    "temperature": {
+      "value": 28.5,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "C"
+        }
+      }
+    },
+    "battery": {
+      "value": 79,
+      "type": "Integer",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:44.743Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "HumiditySensor:room-12",
+    "type": "HumiditySensor",
+    "humidity": {
+      "value": 31.6,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:44.743Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:001",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 115.8,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.84,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 227.7,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.61,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:44.743Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:002",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 222.6,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.81,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 228.8,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 1.23,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:44.743Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:003",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 172.5,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.8,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 228.9,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.89,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:44.743Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "Zone:floor1",
+    "type": "Zone",
+    "totalActivePower": {
+      "value": 425.56174066932545,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "voltageDrop": {
+      "value": 3.913042488057158,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "riskLevel": {
+      "value": "high",
+      "type": "Text"
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:46.750Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "TemperatureSensor:room-12",
+    "type": "TemperatureSensor",
+    "temperature": {
+      "value": 27.6,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "C"
+        }
+      }
+    },
+    "battery": {
+      "value": 84,
+      "type": "Integer",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:46.750Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "TemperatureSensor:outdoor-01",
+    "type": "TemperatureSensor",
+    "temperature": {
+      "value": 29.6,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "C"
+        }
+      }
+    },
+    "battery": {
+      "value": 83,
+      "type": "Integer",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:46.750Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "HumiditySensor:room-12",
+    "type": "HumiditySensor",
+    "humidity": {
+      "value": 44.4,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:46.750Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:001",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 96.5,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.88,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 226.8,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.49,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:46.750Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:002",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 118.1,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.91,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 228.8,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.58,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:46.750Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:003",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 171.5,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.91,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 228.8,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.86,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:46.750Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "Zone:floor1",
+    "type": "Zone",
+    "totalActivePower": {
+      "value": 524.7760514912881,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "voltageDrop": {
+      "value": 4.083677103004803,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "riskLevel": {
+      "value": "high",
+      "type": "Text"
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:48.753Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "TemperatureSensor:room-12",
+    "type": "TemperatureSensor",
+    "temperature": {
+      "value": 27.2,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "C"
+        }
+      }
+    },
+    "battery": {
+      "value": 77,
+      "type": "Integer",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:48.753Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "TemperatureSensor:outdoor-01",
+    "type": "TemperatureSensor",
+    "temperature": {
+      "value": 30.7,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "C"
+        }
+      }
+    },
+    "battery": {
+      "value": 80,
+      "type": "Integer",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:48.753Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "HumiditySensor:room-12",
+    "type": "HumiditySensor",
+    "humidity": {
+      "value": 32.6,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:48.753Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:001",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 84,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.84,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 227.8,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.45,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:48.753Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:002",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 200.4,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.85,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 229.2,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.97,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:48.753Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:003",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 249.9,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.86,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 228.5,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 1.28,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:48.753Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "Zone:floor1",
+    "type": "Zone",
+    "totalActivePower": {
+      "value": 382.20885624940627,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "voltageDrop": {
+      "value": 3.9515664561527473,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "riskLevel": {
+      "value": "high",
+      "type": "Text"
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:50.757Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "TemperatureSensor:room-12",
+    "type": "TemperatureSensor",
+    "temperature": {
+      "value": 27.9,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "C"
+        }
+      }
+    },
+    "battery": {
+      "value": 81,
+      "type": "Integer",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:50.757Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "TemperatureSensor:outdoor-01",
+    "type": "TemperatureSensor",
+    "temperature": {
+      "value": 29.5,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "C"
+        }
+      }
+    },
+    "battery": {
+      "value": 76,
+      "type": "Integer",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:50.757Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "HumiditySensor:room-12",
+    "type": "HumiditySensor",
+    "humidity": {
+      "value": 30.8,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:50.757Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:001",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 191.7,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.88,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 227.2,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.94,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:50.757Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:002",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 210.6,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.89,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 227.5,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 1.16,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:50.757Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:003",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 205.2,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.81,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 226.8,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 1.01,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:50.757Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "Zone:floor1",
+    "type": "Zone",
+    "totalActivePower": {
+      "value": 326.11176510555106,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "voltageDrop": {
+      "value": 3.673576141323011,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "riskLevel": {
+      "value": "high",
+      "type": "Text"
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:52.772Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "TemperatureSensor:room-12",
+    "type": "TemperatureSensor",
+    "temperature": {
+      "value": 26.1,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "C"
+        }
+      }
+    },
+    "battery": {
+      "value": 81,
+      "type": "Integer",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:52.772Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "TemperatureSensor:outdoor-01",
+    "type": "TemperatureSensor",
+    "temperature": {
+      "value": 27.5,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "C"
+        }
+      }
+    },
+    "battery": {
+      "value": 76,
+      "type": "Integer",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:52.772Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "HumiditySensor:room-12",
+    "type": "HumiditySensor",
+    "humidity": {
+      "value": 42.1,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "%"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:52.772Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:001",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 160.9,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.81,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 228.6,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.78,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:52.772Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:002",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 104.7,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.82,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 228.2,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.51,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:52.772Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "SmartPlug:003",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean"
+    },
+    "activePower": {
+      "value": 174.3,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "W"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.85,
+      "type": "Number"
+    },
+    "voltage": {
+      "value": 228,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "V"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.91,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "value": "A"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-07T10:29:52.772Z",
+      "type": "DateTime"
+    }
+  }
+]
