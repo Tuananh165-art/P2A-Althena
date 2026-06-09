@@ -164,6 +164,14 @@ class FIMATAgent {
     }
   }
 
+  async controlDevice(nodeId, action) {
+    return this.matterController.controlDevice(nodeId, action);
+  }
+
+  async applyScenario(scenario, holdMs) {
+    return this.matterController.applyScenario(scenario, { holdMs });
+  }
+
   /**
    * Dừng agent
    */
@@ -205,6 +213,27 @@ if (require.main === module) {
 
   app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'FIMAT Agent is running' });
+  });
+
+  app.post('/devices/:nodeId/control', express.json(), async (req, res) => {
+    try {
+      const { nodeId } = req.params;
+      const { action } = req.body;
+      const result = await agent.controlDevice(nodeId, action);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post('/scenario', express.json(), async (req, res) => {
+    try {
+      const { scenario, holdMs } = req.body;
+      const result = await agent.applyScenario(scenario, holdMs);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
   });
 
   const PORT = config.agent.port;

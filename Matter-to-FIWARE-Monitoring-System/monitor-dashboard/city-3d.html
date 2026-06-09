@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D City - Climate Resilience Copilot</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="city-3d.css?v=10">
+</head>
+<body class="city3d-body">
+<div class="city3d-app">
+    <div class="header city3d-header">
+        <div>
+            <h1>3D City Incident View</h1>
+            <p>Pick a zone, then inspect the building response.</p>
+        </div>
+        <button class="city3d-back" id="city-back-zone" type="button">Zone map</button>
+    </div>
+
+    <div class="status-bar city3d-status">
+        <div class="status-item">
+            <span class="status-dot disconnected" id="orion-status"></span>
+            <span class="status-label">Orion</span>
+            <span id="orion-text">Checking...</span>
+        </div>
+        <div class="status-item">
+            <span class="status-dot disconnected" id="mcp-status"></span>
+            <span class="status-label">MCP Agent</span>
+            <span id="mcp-text">Checking...</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Last update</span>
+            <span id="last-update">--</span>
+        </div>
+    </div>
+
+    <main class="city3d-stage">
+        <section class="city3d-viewport" aria-label="3D zone and building incident visualization">
+            <canvas id="city3d-canvas"></canvas>
+            <div class="city3d-label-layer" id="city-label-layer"></div>
+            <div class="city3d-mode-card" id="city-mode-card">
+                <span id="city-mode-kicker">Zone map</span>
+                <strong id="city-mode-title">Select a monitored zone</strong>
+                <p id="city-mode-copy">Zone A contains live Matter devices. Click the zone or use the controls on the right.</p>
+            </div>
+            <div class="city3d-request-bubble hide" id="city-request-bubble">Request</div>
+            <div class="city3d-outcome hide" id="city-outcome">POWER CUT APPLIED</div>
+        </section>
+
+        <aside class="city3d-sidebar" aria-label="3D controls and status">
+            <section class="city3d-panel">
+                <div class="panel-eyebrow">Zones</div>
+                <div class="zone-picker" id="zone-picker">
+                    <button type="button" class="zone-button active" data-zone="A">
+                        <span>Zone A</span>
+                        <strong id="zone-a-state">Live devices</strong>
+                    </button>
+                    <button type="button" class="zone-button" data-zone="B">
+                        <span>Zone B</span>
+                        <strong>Map only</strong>
+                    </button>
+                    <button type="button" class="zone-button" data-zone="C">
+                        <span>Zone C</span>
+                        <strong>Map only</strong>
+                    </button>
+                </div>
+            </section>
+
+            <section class="city3d-panel city3d-live-panel">
+                <div class="panel-eyebrow">Selected zone</div>
+                <div class="risk-line">
+                    <span id="city-zone-name">Zone A</span>
+                    <strong id="city-risk-level">NO DATA</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Risk score</span>
+                    <strong id="city-risk-score">--</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Temperature</span>
+                    <strong id="city-temp">-- C</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Humidity</span>
+                    <strong id="city-humidity">-- %RH</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Smart plug</span>
+                    <strong id="city-plug">--</strong>
+                </div>
+                <p id="city-rationale">Select Zone A to inspect live device behavior.</p>
+            </section>
+
+            <section class="city3d-panel">
+                <div class="panel-eyebrow">Incident flow</div>
+                <div class="flow-track">
+                    <div class="flow-step" id="flow-sensor">
+                        <span>1</span>
+                        <strong>Sensor spike</strong>
+                    </div>
+                    <div class="flow-step" id="flow-orion">
+                        <span>2</span>
+                        <strong>Orion update</strong>
+                    </div>
+                    <div class="flow-step" id="flow-mcp">
+                        <span>3</span>
+                        <strong>MCP</strong>
+                    </div>
+                    <div class="flow-step" id="flow-plug">
+                        <span>4</span>
+                        <strong>Plug</strong>
+                    </div>
+                    <div class="flow-step" id="flow-room">
+                        <span>5</span>
+                        <strong>Room</strong>
+                    </div>
+                </div>
+                <p class="flow-caption" id="city-command-detail">No control command observed yet.</p>
+            </section>
+
+            <section class="city3d-panel">
+                <div class="panel-eyebrow">Demo controls</div>
+                <button class="city3d-replay" id="city-replay" type="button">
+                    <span>Replay incident</span>
+                    <strong>City -> Zone -> Floor -> Device</strong>
+                </button>
+                <div class="city3d-toolbar">
+                    <button class="btn-simulate btn-normal" data-scenario="normal">Normal</button>
+                    <button class="btn-simulate btn-warning" data-scenario="warning">Warning</button>
+                    <button class="btn-simulate btn-critical" data-scenario="critical">Critical</button>
+                    <button class="btn-simulate btn-evaluate" id="city-force-evaluate">Evaluate</button>
+                </div>
+            </section>
+        </aside>
+    </main>
+</div>
+
+<script src="common.js"></script>
+<script src="nav.js"></script>
+<script>
+    renderNav('city3d');
+    checkOrionConnection();
+    checkMCPConnection();
+</script>
+<script type="module" src="city-3d.js?v=10"></script>
+</body>
+</html>

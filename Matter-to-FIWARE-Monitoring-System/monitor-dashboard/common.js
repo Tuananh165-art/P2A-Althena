@@ -254,6 +254,23 @@ async function simulateScenario(mode) {
   console.log(`[Sim] ${mode}: temp=${temperature.toFixed(1)}°C, humidity=${humidity.toFixed(1)}%, power=${power.toFixed(0)}W`);
 }
 
+async function simulateScenario(mode) {
+  const res = await fetch(`${MCP_URL}/tools/simulate_scenario`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      scenario: mode,
+      zone: 'A',
+      requestedBy: 'dashboard',
+      confirmed: true
+    })
+  });
+  if (!res.ok) throw new Error(`MCP returned ${res.status}`);
+  const result = await res.json();
+  console.log(`[Sim] ${mode}: ${result.status}, audit=${result.auditId || 'N/A'}`);
+  return result;
+}
+
 async function triggerEvaluate() {
   try {
     const res = await fetch(`${MCP_URL}/evaluate`, { method: 'POST' });

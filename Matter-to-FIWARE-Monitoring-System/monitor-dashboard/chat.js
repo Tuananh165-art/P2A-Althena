@@ -151,6 +151,43 @@ async function skillDeviceControl(msg) {
   return { text: `${statusEmoji} ${deviceName}: ${action}\nStatus: ${result.status}\nCommand ID: ${result.commandId || 'N/A'}`, skill: 'device-control' };
 }
 
+async function skillDeviceControl(msg) {
+  let action, deviceId, deviceName;
+  if (msg.includes('plug') || msg.includes('switch')) {
+    const lookup = await fetch(`${MCP_URL}/tools/query_entities?zone=A&type=SmartPlug`);
+    if (!lookup.ok) throw new Error(`MCP returned ${lookup.status}`);
+    const devices = (await lookup.json()).filter(d => d.type === 'SmartPlug');
+    if (devices.length !== 1) {
+      return { text: `Found ${devices.length} smart plugs. Please specify the device before control.`, skill: 'device-control' };
+    }
+    deviceId = devices[0].id;
+    deviceName = 'Smart Plug';
+  } else {
+    return { text: 'Which device? I can control the Smart Plug. Try: "Turn on the smart plug"', skill: 'device-control' };
+  }
+  if (msg.includes('turn on') || msg.includes('switch on') || msg.includes('activate')) action = 'TURN_ON';
+  else if (msg.includes('turn off') || msg.includes('switch off') || msg.includes('deactivate')) action = 'TURN_OFF';
+  else return { text: 'What action? Try "Turn on the smart plug" or "Turn off the smart plug"', skill: 'device-control' };
+
+  const res = await fetch(`${MCP_URL}/tools/invoke_command`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      deviceId,
+      action,
+      reason: 'User requested via OpenClaw chat',
+      confirmed: true,
+      requestedBy: 'dashboard-chat'
+    })
+  });
+  if (!res.ok) throw new Error(`MCP returned ${res.status}`);
+  const result = await res.json();
+  const value = v => (v && typeof v === 'object' && 'value' in v) ? v.value : v;
+  const status = value(result.status);
+  const statusLabel = status === 'ACK' || status === 'SIMULATED_ACK' ? 'OK' : 'ERROR';
+  return { text: `${statusLabel} ${deviceName}: ${action}\nStatus: ${status}\nCommand ID: ${value(result.commandId) || 'N/A'}`, skill: 'device-control' };
+}
+
 async function skillSystemStatus() {
   const services = [
     { name: 'Orion', url: `${ORION_URL}/version` },

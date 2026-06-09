@@ -8,6 +8,11 @@ module.exports = {
     port: process.env.MCP_PORT || 3002,
     pollInterval: parseInt(process.env.MCP_POLL_INTERVAL) || 5000
   },
+  fimat: {
+    host: process.env.FIMAT_HOST || 'localhost',
+    port: process.env.FIMAT_PORT || 3000,
+    baseUrl: () => `http://${module.exports.fimat.host}:${module.exports.fimat.port}`
+  },
   risk: {
     thresholds: {
       humidity: { warning: 75, critical: 90 },

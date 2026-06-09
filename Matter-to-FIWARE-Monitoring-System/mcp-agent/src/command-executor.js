@@ -6,10 +6,7 @@ class CommandExecutor {
   async execute(deviceId, action, reason) {
     const commandId = `cmd-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const timestamp = new Date().toISOString();
-
-    // Simulate command execution (in real system, this would bridge to hardware)
-    const success = Math.random() > 0.05; // 95% success rate
-    const status = success ? 'ACK' : 'ERROR';
+    const status = 'SIMULATED_ACK';
 
     const execution = {
       id: `urn:ngsi-ld:CommandExecution:${commandId}`,
@@ -19,6 +16,7 @@ class CommandExecutor {
       action: { type: 'Text', value: action },
       reason: { type: 'Text', value: reason },
       status: { type: 'Text', value: status },
+      source: { type: 'Text', value: 'simulator' },
       timestamp: { type: 'DateTime', value: timestamp }
     };
 

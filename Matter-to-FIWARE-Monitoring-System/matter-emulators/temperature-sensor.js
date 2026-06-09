@@ -16,6 +16,7 @@ class TemperatureSensorEmulator extends EventEmitter {
     this.temperature = config.initialTemperature || 30; // °C
     this.interval = config.interval || 5000;
     this.attrName = 'temperature';
+    this.manualOverrideUntil = 0;
     this.overheatThreshold = config.overheatThreshold || 50; // °C
   }
 
@@ -27,7 +28,9 @@ class TemperatureSensorEmulator extends EventEmitter {
   startSimulation() {
     setInterval(() => {
       // Random walk nhiệt độ, bias tăng nhẹ (mô phỏng nắng nóng)
-      this.temperature += (Math.random() - 0.45) * 3;
+      if (Date.now() > this.manualOverrideUntil) {
+        this.temperature += (Math.random() - 0.45) * 3;
+      }
       if (this.temperature > 65) this.temperature = 65;
       if (this.temperature < 20) this.temperature = 20;
       this.temperature = Math.round(this.temperature * 10) / 10;
@@ -66,6 +69,32 @@ class TemperatureSensorEmulator extends EventEmitter {
       message: `Temperature ${this.temperature}°C — critical electrical fire risk from heat wave overload!`,
       timestamp: new Date().toISOString()
     });
+  }
+
+  setTemperature(value, options = {}) {
+    this.temperature = Math.max(20, Math.min(65, Number(value)));
+    this.manualOverrideUntil = Date.now() + (options.holdMs || 60000);
+    this.temperature = Math.round(this.temperature * 10) / 10;
+    const event = {
+      type: 'attribute_change',
+      nodeId: this.nodeId,
+      endpointId: this.endpointId,
+      clusterId: this.clusterId,
+      attributeName: this.attrName,
+      attributeValue: this.temperature,
+      unit: 'degC',
+      timestamp: new Date().toISOString()
+    };
+    this.emit('data_change', event);
+    if (this.temperature >= this.overheatThreshold) {
+      this.emit('overheat_alert', {
+        type: 'alert',
+        severity: 'critical',
+        message: `Temperature ${this.temperature} degC - electrical fire risk!`,
+        timestamp: new Date().toISOString()
+      });
+    }
+    return this.getStatus();
   }
 
   getStatus() {
