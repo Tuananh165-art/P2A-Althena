@@ -32,7 +32,7 @@ When the user wants to run a demo or test scenario:
 
 3. Or directly patch Orion entities:
    ```
-   PATCH http://localhost:3001/v2/entities/urn:ngsi-ld:MatterDevice:1_1/attrs
+   PATCH http://localhost:3001/v2/entities/urn:ngsi-ld:HumiditySensor:ZoneA_Room102_Sensor1/attrs
    Body: { "measuredValue": { "type": "Number", "value": 93.5 } }
    ```
 

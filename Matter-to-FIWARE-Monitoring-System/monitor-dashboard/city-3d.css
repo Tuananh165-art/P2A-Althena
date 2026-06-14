@@ -1,6 +1,32 @@
+/* ============================================================
+   city-3d.css — Enhanced IoT Monitoring Dashboard Styles
+   ============================================================ */
+
+/* --- Keyframe Animations ----------------------------------- */
+
+@keyframes pulse-active {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 157, 88, 0.25); }
+  50%      { box-shadow: 0 0 0 7px rgba(46, 157, 88, 0); }
+}
+
+@keyframes pulse-danger {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 53, 69, 0.28); }
+  50%      { box-shadow: 0 0 0 7px rgba(201, 53, 69, 0); }
+}
+
+@keyframes outcome-slide-up {
+  0%   { opacity: 0; transform: translate(-50%, 18px); }
+  100% { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* --- Global Font Rendering --------------------------------- */
+
 .city3d-body {
   padding: 0;
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .city3d-app {
@@ -8,6 +34,8 @@
   background: #f4f6f8;
   color: #1d2430;
 }
+
+/* --- Header ------------------------------------------------ */
 
 .city3d-header {
   display: flex;
@@ -42,10 +70,14 @@
   padding: 0 12px;
 }
 
+/* --- Status bar -------------------------------------------- */
+
 .city3d-status {
   background: #ffffff;
   border-bottom: 1px solid #d8dee8;
 }
+
+/* --- Stage layout ------------------------------------------ */
 
 .city3d-stage {
   display: grid;
@@ -54,11 +86,13 @@
   min-height: 620px;
 }
 
+/* --- Viewport — subtle gradient instead of flat color ------ */
+
 .city3d-viewport {
   position: relative;
   min-width: 0;
   overflow: hidden;
-  background: #dfe7ef;
+  background: linear-gradient(160deg, #e4ecf4 0%, #cdd8e4 40%, #d3dde9 100%);
 }
 
 #city3d-canvas {
@@ -66,6 +100,8 @@
   width: 100%;
   height: 100%;
 }
+
+/* --- Sidebar with hover lift on panels --------------------- */
 
 .city3d-sidebar {
   display: flex;
@@ -82,6 +118,12 @@
   border: 1px solid #d9e0ea;
   border-radius: 8px;
   padding: 12px;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.city3d-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(28, 39, 54, 0.09);
 }
 
 .panel-eyebrow {
@@ -92,6 +134,8 @@
   margin-bottom: 9px;
   text-transform: uppercase;
 }
+
+/* --- Zone picker ------------------------------------------- */
 
 .zone-picker {
   display: grid;
@@ -110,6 +154,7 @@
   min-height: 42px;
   padding: 8px 10px;
   text-align: left;
+  transition: background 180ms ease, border-color 180ms ease;
 }
 
 .zone-button span {
@@ -125,6 +170,8 @@
   background: #eaf3ff;
   border-color: #6aa4e8;
 }
+
+/* --- Risk levels — smoother transitions -------------------- */
 
 .risk-line {
   align-items: center;
@@ -143,12 +190,15 @@
   color: #ffffff;
   font-size: 11px;
   padding: 5px 8px;
+  transition: background 350ms ease, transform 180ms ease, box-shadow 250ms ease;
 }
 
-.risk-normal { background: #2e9d58; }
+.risk-normal  { background: #2e9d58; }
 .risk-warning { background: #c77700; }
 .risk-critical { background: #c93545; }
 .risk-unknown { background: #647184; }
+
+/* --- Metric rows ------------------------------------------- */
 
 .metric-row {
   align-items: center;
@@ -169,6 +219,8 @@
   font-size: 13px;
 }
 
+/* --- Rationale / caption ----------------------------------- */
+
 #city-rationale,
 .flow-caption {
   color: #637083;
@@ -176,6 +228,8 @@
   line-height: 1.45;
   margin-top: 9px;
 }
+
+/* --- Flow steps with pulse animations ---------------------- */
 
 .flow-track {
   display: grid;
@@ -191,6 +245,7 @@
   gap: 9px;
   min-height: 38px;
   padding: 7px 9px;
+  transition: background 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
 }
 
 .flow-step span {
@@ -203,6 +258,7 @@
   height: 22px;
   place-items: center;
   width: 22px;
+  transition: background 200ms ease;
 }
 
 .flow-step strong {
@@ -213,6 +269,7 @@
 .flow-step.active {
   background: #e9f7ef;
   border-color: #9ed9b5;
+  animation: pulse-active 2s ease-in-out infinite;
 }
 
 .flow-step.active span {
@@ -223,12 +280,15 @@
 .flow-step.danger {
   background: #fff0f2;
   border-color: #ef9ba5;
+  animation: pulse-danger 1.6s ease-in-out infinite;
 }
 
 .flow-step.danger span {
   background: #c93545;
   color: #ffffff;
 }
+
+/* --- Toolbar ----------------------------------------------- */
 
 .city3d-toolbar {
   display: grid;
@@ -242,11 +302,16 @@
   width: 100%;
 }
 
+/* --- Mode card — glassmorphism ----------------------------- */
+
 .city3d-mode-card {
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(185, 196, 210, 0.9);
-  border-radius: 8px;
-  box-shadow: 0 12px 30px rgba(37, 49, 65, 0.14);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px) saturate(1.6);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(37, 49, 65, 0.14),
+              0 0 0 1px rgba(185, 196, 210, 0.18);
   left: 16px;
   max-width: 390px;
   padding: 12px;
@@ -277,6 +342,8 @@
   line-height: 1.45;
   margin-top: 6px;
 }
+
+/* --- Replay button ----------------------------------------- */
 
 .city3d-replay {
   background: #17202d;
@@ -309,6 +376,8 @@
   opacity: 0.68;
 }
 
+/* --- Outcome banner — slide-up + fade-in animation --------- */
+
 .city3d-outcome {
   background: #17202d;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -326,13 +395,17 @@
   transform: translateX(-50%);
   transition: opacity 220ms, transform 220ms;
   z-index: 6;
+  animation: outcome-slide-up 380ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 .city3d-outcome.hide {
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, 10px);
+  animation: none;
 }
+
+/* --- Request bubble ---------------------------------------- */
 
 .city3d-request-bubble {
   --bubble-color: #2263b5;
@@ -373,6 +446,8 @@
   transform: translate(-50%, -105%) scale(0.94);
 }
 
+/* --- Label layer ------------------------------------------- */
+
 .city3d-label-layer {
   inset: 0;
   pointer-events: none;
@@ -380,11 +455,16 @@
   z-index: 4;
 }
 
+/* --- City labels — enhanced with backdrop-filter & shadows - */
+
 .city-label {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(139, 151, 168, 0.34);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(8px) saturate(1.4);
+  -webkit-backdrop-filter: blur(8px) saturate(1.4);
+  border: 1px solid rgba(139, 151, 168, 0.26);
   border-radius: 999px;
-  box-shadow: 0 5px 14px rgba(28, 39, 54, 0.11);
+  box-shadow: 0 4px 12px rgba(28, 39, 54, 0.10),
+              0 1px 3px rgba(28, 39, 54, 0.06);
   color: #263142;
   font-family: var(--font-mono);
   font-size: 10px;
@@ -392,29 +472,37 @@
   position: absolute;
   transform: translate(-50%, -50%);
   white-space: nowrap;
+  transition: opacity 180ms ease, transform 180ms ease;
 }
 
 .city-label.zone,
 .city-label.title {
-  background: rgba(23, 32, 45, 0.9);
-  border-color: rgba(23, 32, 45, 0.9);
+  background: rgba(23, 32, 45, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-color: rgba(23, 32, 45, 0.88);
   color: #ffffff;
   font-family: inherit;
   font-size: 12px;
   font-weight: 800;
   padding: 6px 10px;
+  box-shadow: 0 6px 18px rgba(16, 24, 36, 0.22);
 }
 
 .city-label.device {
-  background: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: #17202d;
   font-size: 10px;
   padding: 4px 7px;
 }
 
 .city-label.hint {
-  background: rgba(35, 104, 189, 0.9);
-  border-color: rgba(35, 104, 189, 0.9);
+  background: rgba(35, 104, 189, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(35, 104, 189, 0.88);
   color: #ffffff;
   font-family: inherit;
   font-size: 11px;
@@ -422,8 +510,10 @@
 }
 
 .city-label.room-name {
-  background: rgba(255, 255, 255, 0.84);
-  border-color: rgba(120, 136, 154, 0.28);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(120, 136, 154, 0.22);
   color: #334155;
   font-family: inherit;
   font-size: 10px;
@@ -431,13 +521,16 @@
 }
 
 .city-label.room-target {
-  background: rgba(35, 104, 189, 0.94);
-  border-color: rgba(35, 104, 189, 0.94);
+  background: rgba(35, 104, 189, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-color: rgba(35, 104, 189, 0.92);
   color: #ffffff;
   font-family: inherit;
   font-size: 11px;
   font-weight: 900;
   padding: 6px 10px;
+  box-shadow: 0 6px 16px rgba(35, 104, 189, 0.25);
 }
 
 .city-label.off {
@@ -450,7 +543,10 @@
   background: #c93545;
   border-color: #c93545;
   color: #ffffff;
+  box-shadow: 0 4px 14px rgba(201, 53, 69, 0.3);
 }
+
+/* --- Responsive -------------------------------------------- */
 
 @media (max-width: 980px) {
   .city3d-body {
@@ -470,4 +566,173 @@
   .city3d-sidebar {
     border-left: 0;
   }
+}
+
+/* --- Embed mode -------------------------------------------- */
+
+.city3d-embed {
+  overflow: hidden;
+  background: #dfe7ef;
+}
+
+.city3d-embed .city3d-header,
+.city3d-embed .city3d-status,
+.city3d-embed .nav-bar,
+.city3d-embed .city3d-sidebar {
+  display: none;
+}
+
+.city3d-embed .city3d-app {
+  min-height: 100vh;
+}
+
+.city3d-embed .city3d-stage {
+  display: block;
+  height: 100vh;
+  min-height: 0;
+}
+
+.city3d-embed .city3d-viewport {
+  width: 100%;
+  height: 100%;
+}
+
+.city3d-embed .city3d-mode-card {
+  max-width: 310px;
+  padding: 10px;
+}
+
+.city3d-embed .city3d-mode-card strong {
+  font-size: 14px;
+}
+
+.city3d-embed .city3d-mode-card p {
+  display: none;
+}
+
+.city3d-embed .city3d-outcome {
+  bottom: 14px;
+  font-size: 13px;
+}
+.city-label.device[data-state="on"] {
+  border-color: #3fa968;
+  color: #176b3a;
+}
+
+.city-label.device[data-state="off"] {
+  border-color: #2368bd;
+  color: #244f82;
+}
+
+.city-label.device[data-state="offline"],
+.city-label.device[data-state="not-mapped"] {
+  border-color: #77879a;
+  color: #566274;
+}
+
+/* Operations console theme */
+.city3d-app {
+  min-height: 100vh;
+  background: #151b27;
+  color: #e8edf3;
+}
+
+.city3d-header {
+  padding: 15px 28px;
+  background: #242a37;
+  border-bottom: 1px solid #313947;
+}
+
+.city3d-header h1 {
+  color: #f4f6f8;
+  font-size: 19px;
+}
+
+.city3d-back {
+  min-width: 86px;
+  border: 1px solid #3a4352;
+  border-radius: 6px;
+  background: #29313e;
+  color: #cbd3de;
+}
+
+.city3d-back:hover {
+  border-color: #32c3cb;
+  color: #54d5d7;
+}
+
+.city3d-stage {
+  height: calc(100vh - 78px);
+}
+
+.city3d-sidebar {
+  background: #202733;
+  border-left-color: #343d4b;
+}
+
+.city3d-panel {
+  background: #252c39;
+  border-color: #343d4b;
+  box-shadow: none;
+}
+
+.city3d-panel:hover {
+  box-shadow: 0 8px 18px rgba(5, 10, 17, 0.18);
+}
+
+.panel-eyebrow {
+  color: #78869a;
+}
+
+.zone-button,
+.flow-step {
+  background: #202733;
+  border-color: #3b4554;
+  color: #d6dde6;
+}
+
+.zone-button strong,
+.metric-row span,
+#city-rationale,
+.flow-caption {
+  color: #8f9caf;
+}
+
+.zone-button.active {
+  background: #293440;
+  border-color: #32c3cb;
+}
+
+.metric-row {
+  border-top-color: #343d4b;
+}
+
+.metric-row strong,
+.flow-step strong,
+.risk-line span {
+  color: #e6ebf1;
+}
+
+.flow-step span {
+  background: #343e4d;
+  color: #aeb8c5;
+}
+
+.city3d-replay,
+.city3d-toolbar .btn-simulate {
+  border-color: #414b5b;
+  background: #2a3240;
+  color: #d5dce5;
+}
+
+.city3d-embed .city3d-shell {
+  display: block;
+}
+
+.city3d-embed [data-ops-sidebar] {
+  display: none;
+}
+
+.city3d-embed .city3d-main {
+  width: 100%;
 }

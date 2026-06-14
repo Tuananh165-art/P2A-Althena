@@ -61,6 +61,14 @@ class ZigbeeAdapter {
     const mapping = config.deviceMap[deviceType] || { type: 'ZigbeeDevice', attrs: {} };
     const attrs = {};
     const timestamp = new Date().toISOString();
+    const registeredDevice = this.registry.getAll().find(device => device.entityId === entityId);
+
+    attrs.protocol = { type: 'Text', value: 'zigbee' };
+    attrs.online = { type: 'Boolean', value: true };
+    attrs.lastSeen = { type: 'DateTime', value: timestamp };
+    if (registeredDevice?.friendlyName) {
+      attrs.friendlyName = { type: 'Text', value: registeredDevice.friendlyName };
+    }
 
     // Map known attributes
     for (const [zigbeeKey, ngsiKey] of Object.entries(mapping.attrs)) {

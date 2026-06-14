@@ -38,6 +38,14 @@ function parseMatterNodeId(deviceId) {
   return match ? match[1] : null;
 }
 
+function deviceProtocol(device) {
+  const explicit = String(ngsiValue(device.protocol) || ngsiValue(device.source) || '').toLowerCase();
+  if (explicit) return explicit;
+  if (String(device.id || '').includes(':ZigbeeDevice:')) return 'zigbee';
+  if (parseMatterNodeId(device.id)) return 'matter';
+  return '';
+}
+
 function sortByTimestampNewestFirst(items) {
   return items.sort((a, b) => {
     const aTime = new Date(ngsiValue(a.timestamp) || 0).getTime();
@@ -49,9 +57,23 @@ function sortByTimestampNewestFirst(items) {
 function createFimatDeviceAdapter() {
   return {
     async execute(device, action) {
+      const protocol = deviceProtocol(device);
+      if (protocol === 'zigbee') {
+        const friendlyName = ngsiValue(device.friendlyName);
+        if (!friendlyName) {
+          throw new Error(`Zigbee device ${device.id} has no friendlyName`);
+        }
+        const { data } = await axios.post(
+          `${config.zigbee.baseUrl()}/devices/${encodeURIComponent(friendlyName)}/control`,
+          { state: action === 'TURN_ON' ? 'ON' : 'OFF' },
+          { timeout: 5000 }
+        );
+        return { ...data, source: 'zigbee', reportedStateRequired: true };
+      }
+
       const nodeId = parseMatterNodeId(device.id);
       if (!nodeId) {
-        throw new Error(`Cannot resolve Matter node id from ${device.id}`);
+        throw new Error(`No live control adapter for ${device.id}`);
       }
 
       const { data } = await axios.post(
@@ -59,7 +81,7 @@ function createFimatDeviceAdapter() {
         { action },
         { timeout: 5000 }
       );
-      return data || { source: 'fimat-emulator' };
+      return { ...(data || {}), source: 'matter', reportedStateRequired: true };
     },
 
     async simulate(scenario, holdMs) {
@@ -119,7 +141,7 @@ class MCPAgent {
     setTimeout(() => this.pollLoop(), config.agent.pollInterval);
   }
 
-  async evaluateAndAct() {
+  async evaluateAndAct(bypassCooldown = false) {
     const entities = await this.orion.getEntities();
     const riskResults = this.riskEngine.evaluate(entities);
     this.lastRiskResults = riskResults;
@@ -165,7 +187,7 @@ class MCPAgent {
       }
 
       if (result.riskLevel === 'critical') {
-        await this.executeActions(result);
+        await this.executeActions(result, bypassCooldown);
       }
     }
   }
@@ -198,10 +220,11 @@ class MCPAgent {
     return alert;
   }
 
-  async executeActions(result) {
+  async executeActions(result, bypassCooldown = false) {
     const criticalKey = `${result.zone}:${result.riskLevel}`;
     const last = this.lastCriticalActionAt.get(criticalKey) || 0;
-    if (Date.now() - last < config.risk.cooldownMs) {
+    if (!bypassCooldown && (Date.now() - last < config.risk.cooldownMs)) {
+      console.log(`[MCP] Cooldown active for critical actions, skipping.`);
       return [];
     }
     this.lastCriticalActionAt.set(criticalKey, Date.now());
@@ -247,7 +270,7 @@ class MCPAgent {
 
   async findDevices(type, zone = 'A') {
     const entities = await this.queryEntities(zone, type);
-    return entities.filter(entity => entity.type === type || DEVICE_TYPES.has(entity.type));
+    return entities.filter(entity => entity.type === type);
   }
 
   computeRisk(zone = 'A') {
@@ -287,17 +310,33 @@ class MCPAgent {
       throw new Error(`Device not found: ${deviceId}`);
     }
 
-    let adapterResult = { source: 'simulator' };
+    const simulatorMode = config.control.mode === 'simulator';
+    let adapterResult = { source: simulatorMode ? 'simulator' : deviceProtocol(device) || 'unknown' };
+    let status = 'PENDING';
+    let commandError = '';
+
     if (device.type === 'SmartPlug') {
-      try {
-        adapterResult = await this.deviceAdapter.execute(device, action);
-      } catch (e) {
-        console.error(`[MCP] Device adapter failed, falling back to Orion state update: ${e.message}`);
+      if (simulatorMode) {
+        await this.updateSmartPlugState(deviceId, action, 'simulator');
+        status = 'SIMULATED_ACK';
+      } else {
+        try {
+          adapterResult = await this.deviceAdapter.execute(device, action);
+          const confirmed = await this.waitForReportedState(deviceId, action === 'TURN_ON');
+          status = confirmed ? 'CONFIRMED' : 'PENDING';
+        } catch (error) {
+          status = 'FAILED';
+          commandError = error.message;
+          console.error(`[MCP] Live device command failed: ${error.message}`);
+        }
       }
-      await this.updateSmartPlugState(deviceId, action, adapterResult.source || 'simulator');
     }
 
-    const exec = await this.commandExecutor.execute(deviceId, action, reason);
+    const exec = await this.commandExecutor.execute(deviceId, action, reason, {
+      status,
+      source: adapterResult.source,
+      error: commandError
+    });
     exec.source = attr('Text', adapterResult.source || 'simulator');
     exec.requestedBy = attr('Text', options.requestedBy || 'unknown');
     exec.auto = attr('Boolean', options.auto === true);
@@ -311,9 +350,20 @@ class MCPAgent {
       source: exec.source,
       requestedBy: exec.requestedBy,
       auto: exec.auto,
+      error: exec.error,
       timestamp: exec.timestamp
     });
     return exec;
+  }
+
+  async waitForReportedState(deviceId, expectedState) {
+    const deadline = Date.now() + config.control.confirmationTimeoutMs;
+    while (Date.now() < deadline) {
+      const current = await this.orion.getEntity(deviceId);
+      if (current && ngsiValue(current.onOff) === expectedState) return true;
+      await new Promise(resolve => setTimeout(resolve, config.control.confirmationPollMs));
+    }
+    return false;
   }
 
   async updateSmartPlugState(deviceId, action, source) {
@@ -334,6 +384,10 @@ class MCPAgent {
   }
 
   async simulateScenario(scenario, zone = 'A', requestedBy = 'unknown') {
+    if (config.control.mode !== 'simulator') {
+      throw new Error('Scenario simulation is disabled while DEVICE_CONTROL_MODE=live');
+    }
+
     const values = SCENARIOS[scenario];
     if (!values) {
       throw new Error(`Unsupported scenario: ${scenario}`);
@@ -490,7 +544,12 @@ if (require.main === module) {
   });
 
   app.get('/health', (req, res) => {
-    res.json({ status: 'ok', message: 'MCP Agent running', uptime: process.uptime() });
+    res.json({
+      status: 'ok',
+      message: 'MCP Agent running',
+      controlMode: config.control.mode,
+      uptime: process.uptime()
+    });
   });
 
   app.get('/tools', (req, res) => {
@@ -623,7 +682,7 @@ if (require.main === module) {
   app.post('/evaluate', async (req, res) => {
     try {
       console.log('[MCP] Manual /evaluate triggered');
-      await agent.evaluateAndAct();
+      await agent.evaluateAndAct(true); // Bypass cooldown for manual triggers
       res.json({ status: 'ok', results: agent.lastRiskResults });
     } catch (e) {
       console.error(`[MCP] /evaluate error: ${e.message}`, e.stack);

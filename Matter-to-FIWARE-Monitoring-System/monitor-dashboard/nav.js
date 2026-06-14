@@ -24,3 +24,50 @@ function renderNav(activePage) {
     statusBar.parentNode.appendChild(nav);
   }
 }
+
+function renderOpsSidebar(activePage) {
+  const host = document.querySelector('[data-ops-sidebar]');
+  if (!host) return;
+
+  const pages = [
+    { id: 'dashboard', label: 'Overview', href: 'index.html' },
+    { id: 'city3d', label: '3D Zones', href: 'city-3d.html' },
+    { id: 'devices', label: 'Devices', href: 'devices.html' },
+    { id: 'alerts', label: 'Alerts', href: 'alerts.html' },
+    { id: 'map', label: 'Map', href: 'map.html' },
+    { id: 'simulator', label: 'Simulator', href: 'simulator.html' },
+    { id: 'chat', label: 'AI Chat', href: 'chat.html' }
+  ];
+
+  host.className = 'ops-sidebar';
+  host.innerHTML = `
+    <a class="ops-brand" href="index.html" aria-label="Climate Resilience Copilot">
+      <span class="ops-brand-mark">CR</span>
+      <span>
+        <strong>Climate Resilience</strong>
+        <small>Operations Copilot</small>
+      </span>
+    </a>
+    <nav class="ops-nav" aria-label="Main navigation">
+      ${pages.map(page => `
+        <a href="${page.href}" class="${page.id === activePage ? 'active' : ''}">
+          <span>${page.label}</span>
+        </a>
+      `).join('')}
+    </nav>
+    <div class="ops-sidebar-status">
+      <span class="sidebar-eyebrow">System</span>
+      <div class="sidebar-health-row">
+        <span class="status-dot disconnected" id="orion-status"></span>
+        <span>Orion</span>
+        <strong id="orion-text">Checking...</strong>
+      </div>
+      <div class="sidebar-health-row">
+        <span class="status-dot disconnected" id="mcp-status"></span>
+        <span>MCP Agent</span>
+        <strong id="mcp-text">Checking...</strong>
+      </div>
+      <a class="sidebar-chat-link" href="chat.html">Open Copilot</a>
+    </div>
+  `;
+}

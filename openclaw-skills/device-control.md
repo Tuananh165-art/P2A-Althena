@@ -12,8 +12,8 @@ When the user wants to control an IoT device:
 
 | Device | Entity ID | Actions |
 |--------|-----------|---------|
-| Humidity Sensor | urn:ngsi-ld:MatterDevice:1_1 | read only |
-| Smart Plug | urn:ngsi-ld:MatterDevice:2_1 | ON, OFF, toggle |
+| Humidity Sensor | urn:ngsi-ld:HumiditySensor:ZoneA_Room102_Sensor1 | read only |
+| Smart Plug | urn:ngsi-ld:SmartPlug:ZoneA_Room102_AC | ON, OFF, toggle |
 | Alert Lamp | via Zigbee bridge | ON, OFF, brightness |
 | Zigbee devices | via Zigbee bridge | ON, OFF, set value |
 
@@ -30,7 +30,7 @@ When the user wants to control an IoT device:
    ```
    POST http://localhost:3002/tools/invoke_command
    Body: {
-     "deviceId": "urn:ngsi-ld:MatterDevice:2_1",
+     "deviceId": "urn:ngsi-ld:SmartPlug:ZoneA_Room102_AC",
      "action": "TURN_ON",
      "reason": "User requested via OpenClaw"
    }

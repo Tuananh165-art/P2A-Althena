@@ -20,6 +20,12 @@ class MatterController extends EventEmitter {
   async initialize() {
     console.log('[MatterController] Initializing connection to Matter Emulators...');
 
+    if (process.env.ENABLE_LEGACY_MATTER_EMULATORS !== 'true') {
+      this.isRunning = true;
+      console.log('[MatterController] Legacy Node 1/2/3 emulators are disabled.');
+      return true;
+    }
+
     try {
       // Import emulator classes from matter-emulators directory
       const emulatorsPath = path.join(__dirname, '../../matter-emulators');

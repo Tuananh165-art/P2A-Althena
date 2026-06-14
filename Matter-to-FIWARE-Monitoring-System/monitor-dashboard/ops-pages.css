@@ -1,0 +1,214 @@
+.ops-page {
+  min-height: 100vh;
+  padding: 0;
+  overflow-x: hidden;
+  background: #151b27;
+}
+
+.ops-page::before {
+  display: none;
+}
+
+.ops-page-content {
+  display: grid;
+  width: 100%;
+  max-width: 1540px;
+  gap: 14px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+.ops-page .container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ops-page .page-intro,
+.ops-page .section,
+.ops-page .device-card,
+.ops-chat-panel {
+  border: 1px solid #343d4b;
+  border-radius: 7px;
+  background: #252c39;
+  box-shadow: none;
+}
+
+.ops-page .page-intro h3,
+.ops-page .section h3,
+.ops-page .device-card h2 {
+  color: #f1f4f8;
+  letter-spacing: 0;
+}
+
+.ops-page .page-intro-copy,
+.ops-page .device-id,
+.ops-page .metric-label,
+.ops-page .status-info {
+  color: #8f9caf;
+}
+
+.ops-page .metric-value,
+.ops-page .metric-unit,
+.ops-page .entity-id,
+.ops-page .attribute {
+  color: #dce3ec;
+}
+
+.ops-page .technical-details summary {
+  color: #c4ccd7;
+}
+
+.ops-page .devices-grid {
+  margin: 0;
+  padding: 0;
+}
+
+.ops-page .device-card {
+  overflow: hidden;
+}
+
+.ops-page .device-content,
+.ops-page .device-header {
+  background: transparent;
+}
+
+.ops-page .progress-bar {
+  background: #171d28;
+}
+
+.ops-topbar-status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #8895a7;
+  font-size: 10px;
+}
+
+.ops-chat-panel {
+  position: relative;
+  inset: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  top: auto;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-width: none;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  z-index: 1;
+  animation: none;
+  transform: none;
+}
+
+.ops-chat-page {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.ops-chat-page .ops-shell,
+.ops-chat-page .ops-main {
+  height: 100vh;
+  min-height: 0;
+}
+
+.ops-chat-page .ops-main {
+  display: grid;
+  grid-template-rows: 78px minmax(0, 1fr);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ops-chat-page .ops-page-content {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-width: none;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.ops-chat-page .ops-sidebar {
+  z-index: 3;
+}
+
+.ops-chat-panel .chat-header {
+  border-bottom: 1px solid #343d4b;
+  background: #252c39;
+}
+
+.ops-chat-panel .chat-quick-actions,
+.ops-chat-panel .chat-input-area {
+  background: #202733;
+  border-color: #343d4b;
+}
+
+.ops-chat-panel .chat-messages {
+  min-height: 0;
+  height: auto;
+  overflow-y: auto;
+  background: #1a202b;
+}
+
+.ops-chat-panel .chat-input {
+  border-color: #414b5b;
+  background: #171d27;
+  color: #eef2f7;
+}
+
+.ops-chat-panel .quick-action-btn {
+  border-color: #414b5b;
+  background: #2a3240;
+  color: #cbd3de;
+}
+
+.ops-chat-panel .quick-action-btn:hover {
+  border-color: #32c3cb;
+  color: #54d5d7;
+}
+
+@media (max-width: 900px) {
+  .ops-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-sidebar {
+    position: relative;
+    height: auto;
+  }
+
+  .ops-sidebar-status {
+    display: none;
+  }
+
+  .ops-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .ops-page-content {
+    padding: 12px;
+  }
+
+  .ops-chat-page {
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+
+  .ops-chat-page .ops-shell,
+  .ops-chat-page .ops-main {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .ops-chat-page .ops-main {
+    grid-template-rows: auto minmax(620px, 1fr);
+  }
+}

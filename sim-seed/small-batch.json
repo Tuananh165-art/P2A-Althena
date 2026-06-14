@@ -1,16 +1,376 @@
 [
   {
-    "id": "SmartPlug:001",
-    "type": "SmartPlug",
-    "onOff": { "value": true, "type": "Boolean" },
-    "activePower": { "value": 120.2, "type": "Number", "metadata": { "unit": { "value": "W" } } },
-    "timestamp": { "value": "2026-06-05T12:00:00.000Z", "type": "DateTime" }
+    "id": "urn:ngsi-ld:Zone:ZoneA",
+    "type": "Zone",
+    "totalActivePower": {
+      "value": 44.38480756105788,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "W"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "voltageDrop": {
+      "value": 3.240731115521953,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "V"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "riskLevel": {
+      "value": "low",
+      "type": "Text",
+      "metadata": {
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "timestamp": {
+      "value": "2026-06-09T02:25:58.139Z",
+      "type": "DateTime"
+    }
   },
   {
-    "id": "TemperatureSensor:room-12",
+    "id": "urn:ngsi-ld:TemperatureSensor:ZoneA_Room102_Wiring",
     "type": "TemperatureSensor",
-    "temperature": { "value": 29.3, "type": "Number", "metadata": { "unit": { "value": "C" } } },
-    "battery": { "value": 88, "type": "Integer", "metadata": { "unit": { "value": "%" } } },
-    "timestamp": { "value": "2026-06-05T12:00:01.500Z", "type": "DateTime" }
+    "temperature": {
+      "value": 22.7,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "C"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "battery": {
+      "value": 82,
+      "type": "Integer",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "%"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "zone": {
+      "value": "A",
+      "type": "Text"
+    },
+    "timestamp": {
+      "value": "2026-06-09T02:25:58.139Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "urn:ngsi-ld:TemperatureSensor:ZoneA_Outdoor_Ambient",
+    "type": "TemperatureSensor",
+    "temperature": {
+      "value": 25,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "C"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "battery": {
+      "value": 79,
+      "type": "Integer",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "%"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "zone": {
+      "value": "Outdoor",
+      "type": "Text"
+    },
+    "timestamp": {
+      "value": "2026-06-09T02:25:58.139Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "urn:ngsi-ld:HumiditySensor:ZoneA_Room102_Sensor1",
+    "type": "HumiditySensor",
+    "measuredValue": {
+      "value": 43.6,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "%RH"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "zone": {
+      "value": "A",
+      "type": "Text"
+    },
+    "timestamp": {
+      "value": "2026-06-09T02:25:58.139Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "urn:ngsi-ld:SmartPlug:ZoneA_Room102_AC",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": false,
+      "type": "Boolean",
+      "metadata": {
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "activePower": {
+      "value": 0,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "W"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.97,
+      "type": "Number",
+      "metadata": {
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "voltage": {
+      "value": 230.7,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "V"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "A"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "zone": {
+      "value": "A",
+      "type": "Text"
+    },
+    "timestamp": {
+      "value": "2026-06-09T02:25:58.139Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "urn:ngsi-ld:SmartPlug:ZoneA_Room102_Server",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean",
+      "metadata": {
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "activePower": {
+      "value": 73.5,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "W"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.94,
+      "type": "Number",
+      "metadata": {
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "voltage": {
+      "value": 230,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "V"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.33,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "A"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "zone": {
+      "value": "A",
+      "type": "Text"
+    },
+    "timestamp": {
+      "value": "2026-06-09T02:25:58.139Z",
+      "type": "DateTime"
+    }
+  },
+  {
+    "id": "urn:ngsi-ld:SmartPlug:ZoneA_Room102_Fan",
+    "type": "SmartPlug",
+    "onOff": {
+      "value": true,
+      "type": "Boolean",
+      "metadata": {
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "activePower": {
+      "value": 65.4,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "W"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "powerFactor": {
+      "value": 0.99,
+      "type": "Number",
+      "metadata": {
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "voltage": {
+      "value": 229,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "V"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "currentEstimate": {
+      "value": 0.3,
+      "type": "Number",
+      "metadata": {
+        "unit": {
+          "type": "string",
+          "value": "A"
+        },
+        "timestamp": {
+          "type": "string",
+          "value": "2026-06-09T02:25:58.139Z"
+        }
+      }
+    },
+    "zone": {
+      "value": "A",
+      "type": "Text"
+    },
+    "timestamp": {
+      "value": "2026-06-09T02:25:58.139Z",
+      "type": "DateTime"
+    }
   }
 ]

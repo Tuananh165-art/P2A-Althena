@@ -3,9 +3,14 @@
    Shared logic across all dashboard pages
    ============================================ */
 
-const ORION_URL = 'http://localhost:3001';
-const MCP_URL = 'http://localhost:3002';
-const FIMAT_URL = 'http://localhost:3000';
+const host = window.location.hostname || '127.0.0.1';
+const ORION_URL = `http://${host}:3001`;
+const MCP_URL = `http://${host}:3002`;
+const FIMAT_URL = `http://${host}:3000`;
+
+window.ORION_URL = ORION_URL;
+window.MCP_URL = MCP_URL;
+window.FIMAT_URL = FIMAT_URL;
 const REFRESH_INTERVAL = 3000;
 
 const state = {
@@ -56,7 +61,7 @@ function setConnectionStatus(service, connected, text) {
 
 async function fetchEntities(callback) {
   try {
-    const res = await fetch(`${ORION_URL}/v2/entities`, {
+    const res = await fetch(`${ORION_URL}/v2/entities?limit=100`, {
       headers: { 'Accept': 'application/json' }
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -93,7 +98,6 @@ async function fetchRisk(callback) {
     }
   } catch {}
 }
-
 async function fetchAlerts(limit, callback) {
   try {
     const res = await fetch(`${MCP_URL}/alerts?limit=${limit || 20}`);
@@ -114,8 +118,8 @@ async function fetchCommands(limit, callback) {
 
 // === UI Updates ===
 
-function updateDeviceUI(entityId, attr, value, attrObj) {
-  if (entityId.includes('3_1') && attr === 'temperature') {
+function updateDeviceUI(entityId, attr, value, attrObj, entityType) {
+  if (entityType === 'TemperatureSensor' && attr === 'temperature') {
     const v = document.getElementById('temp-value');
     const p = document.getElementById('temp-progress');
     const s = document.getElementById('temp-status');
@@ -127,7 +131,7 @@ function updateDeviceUI(entityId, attr, value, attrObj) {
       else { s.textContent = 'Normal — No thermal risk detected'; s.style.color = '#4caf50'; }
     }
   }
-  if (entityId.includes('1_1') && attr === 'measuredValue') {
+  if (entityType === 'HumiditySensor' && attr === 'measuredValue') {
     const v = document.getElementById('humidity-value');
     const p = document.getElementById('humidity-progress');
     const s = document.getElementById('humidity-status');
@@ -139,7 +143,7 @@ function updateDeviceUI(entityId, attr, value, attrObj) {
       else { s.textContent = 'Normal — No moisture risk'; s.style.color = '#4caf50'; }
     }
   }
-  if (entityId.includes('2_1')) {
+  if (entityType === 'SmartPlug') {
     if (attr === 'onOff') {
       const badge = document.getElementById('plug-status');
       if (badge) { badge.textContent = value ? 'ON' : 'OFF'; badge.className = `status-badge ${value ? 'on' : 'off'}`; }
@@ -153,7 +157,166 @@ function updateDeviceUI(entityId, attr, value, attrObj) {
   }
 }
 
+function renderDeviceCards(entities) {
+  const grid = document.getElementById('devices-grid');
+  if (!grid) return;
+  const controlsEnabled = grid.dataset.deviceControls === 'true';
+
+  const devices = entities.filter(e =>
+    ['TemperatureSensor', 'HumiditySensor', 'SmartPlug'].includes(e.type) &&
+    !isLegacyMatterEntity(e)
+  );
+  if (devices.length === 0) {
+    grid.innerHTML = '<p class="no-data">No devices discovered in Orion</p>';
+    return;
+  }
+
+  devices.sort((a, b) => a.type.localeCompare(b.type) || a.id.localeCompare(b.id));
+
+  let html = '';
+  devices.forEach(d => {
+    const zone = d.zone?.value || d.zone || 'A';
+    const shortId = d.id.split(':').pop();
+    const presentation = getDevicePresentation(d, shortId);
+
+    if (d.type === 'TemperatureSensor') {
+      const temp = d.temperature?.value ?? 0;
+      let status = 'Normal — No thermal risk detected';
+      let statusColor = '#4caf50';
+      let cardClass = '';
+      if (temp >= 50) {
+        status = 'CRITICAL — Overheat! Fire risk!';
+        statusColor = '#f44336';
+        cardClass = 'fire-risk';
+      } else if (temp >= 40) {
+        status = 'WARNING — Heat stress';
+        statusColor = '#ff9800';
+      }
+      html += `
+        <div class="device-card ${cardClass}">
+          <div class="device-header">
+            <h2>${presentation.name}</h2>
+            <span class="device-id">${shortId} (Zone ${zone})</span>
+          </div>
+          <div class="device-content">
+            <div class="metric">
+              <span class="metric-label">Ambient</span>
+              <span class="metric-value">${temp.toFixed(1)}</span>
+              <span class="metric-unit">&deg;C</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100, (temp / 65) * 100)}%"></div></div>
+            <div class="status-info" style="color:${statusColor}">${status}</div>
+          </div>
+        </div>`;
+    }
+
+    if (d.type === 'HumiditySensor') {
+      const humidity = d.measuredValue?.value ?? 0;
+      let status = 'Normal — No moisture risk';
+      let statusColor = '#4caf50';
+      if (humidity >= 90) {
+        status = 'CRITICAL — Short circuit risk!';
+        statusColor = '#f44336';
+      } else if (humidity >= 75) {
+        status = 'WARNING — High moisture';
+        statusColor = '#ff9800';
+      }
+      html += `
+        <div class="device-card">
+          <div class="device-header">
+            <h2>${presentation.name}</h2>
+            <span class="device-id">${shortId} (Zone ${zone})</span>
+          </div>
+          <div class="device-content">
+            <div class="metric">
+              <span class="metric-label">Humidity</span>
+              <span class="metric-value">${humidity.toFixed(1)}</span>
+              <span class="metric-unit">%RH</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100, humidity)}%"></div></div>
+            <div class="status-info" style="color:${statusColor}">${status}</div>
+          </div>
+        </div>`;
+    }
+
+    if (d.type === 'SmartPlug') {
+      const activePower = d.activePower?.value ?? 0;
+      const rawOnOff = d.onOff?.value;
+      const onOff = rawOnOff === true || rawOnOff === 'true' || rawOnOff === 'ON' || rawOnOff === 'on' || rawOnOff === 1 || rawOnOff === '1';
+      const badgeText = onOff ? 'ON' : 'OFF';
+      const badgeClass = onOff ? 'on' : 'off';
+      const controlAction = onOff ? 'TURN_OFF' : 'TURN_ON';
+      const controlLabel = onOff ? 'Turn off' : 'Turn on';
+      const encodedDeviceId = encodeURIComponent(d.id);
+      const commandResult = window.deviceControlResults?.[d.id];
+      html += `
+        <div class="device-card" data-device-card="${encodedDeviceId}">
+          <div class="device-header">
+            <h2>${presentation.name}</h2>
+            <span class="device-id">${shortId} (Zone ${zone})</span>
+          </div>
+          <div class="device-content">
+            <div class="metric">
+              <span class="metric-label">${presentation.kind}</span>
+              <span class="status-badge ${badgeClass}">${badgeText}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Power</span>
+              <span class="metric-value">${activePower}</span>
+              <span class="metric-unit">W</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100, (activePower / 1000) * 100)}%"></div></div>
+            ${controlsEnabled ? `
+              <div class="device-control">
+                <button
+                  class="device-power-button ${onOff ? 'is-on' : 'is-off'}"
+                  type="button"
+                  data-device-id="${encodedDeviceId}"
+                  data-action="${controlAction}"
+                  aria-label="${controlLabel} ${presentation.name}"
+                >
+                  <span class="power-symbol" aria-hidden="true"></span>
+                  <span>${controlLabel}</span>
+                </button>
+                <span class="device-control-result ${commandResult?.className || ''}" aria-live="polite">${escapeHtml(commandResult?.text || '')}</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>`;
+    }
+  });
+
+  grid.innerHTML = html;
+}
+
+function getDevicePresentation(device, shortId) {
+  const explicitName = device.displayName?.value || device.displayName || device.name?.value || device.name;
+  const genericNames = ['smart plug', 'smartplug', 'matter device', 'device'];
+  const hasSpecificName = explicitName && !genericNames.includes(String(explicitName).trim().toLowerCase());
+  if (hasSpecificName) {
+    return {
+      name: escapeHtml(String(explicitName)),
+      kind: device.type === 'SmartPlug' ? 'Controlled load' : 'Sensor'
+    };
+  }
+
+  const normalizedId = String(shortId || '').replace(/[_-]+/g, ' ');
+  const idLower = normalizedId.toLowerCase();
+  if (device.type === 'SmartPlug') {
+    if (idLower.includes('ac') || idLower.includes('air conditioner')) return { name: 'Air Conditioner', kind: 'HVAC load' };
+    if (idLower.includes('fan')) return { name: 'Ventilation Fan', kind: 'Fan load' };
+    if (idLower.includes('server')) return { name: 'Server Rack', kind: 'IT load' };
+    if (idLower.includes('lamp') || idLower.includes('light')) return { name: 'Room Lighting', kind: 'Lighting load' };
+    if (idLower.includes('heater')) return { name: 'Electric Heater', kind: 'Heating load' };
+    return { name: `Controlled Outlet ${escapeHtml(normalizedId)}`, kind: 'Outlet load' };
+  }
+  if (device.type === 'TemperatureSensor') return { name: 'Temperature Sensor', kind: 'Sensor' };
+  if (device.type === 'HumiditySensor') return { name: 'Humidity Sensor', kind: 'Sensor' };
+  return { name: escapeHtml(normalizedId || device.type), kind: 'Device' };
+}
+
 function processEntities(entities) {
+  entities = entities.filter(entity => !isLegacyMatterEntity(entity));
   let entriesHTML = '';
   entities.forEach(entity => {
     let attrs = [];
@@ -163,7 +326,6 @@ function processEntities(entities) {
       const value = attr.value !== undefined ? attr.value : attr;
       const type = attr.type || typeof value;
       attrs.push(`${key}: ${formatVal(value)} (${type})`);
-      updateDeviceUI(entity.id, key, value, attr);
     }
     entriesHTML += `
       <div class="entity-item">
@@ -178,6 +340,13 @@ function processEntities(entities) {
   });
   const el = document.getElementById('entities-list');
   if (el) el.innerHTML = entriesHTML || '<p class="no-data">No entities</p>';
+
+  // Render device cards dynamically
+  renderDeviceCards(entities);
+}
+
+function isLegacyMatterEntity(entity) {
+  return /^urn:ngsi-ld:MatterDevice:[123]_1$/.test(String(entity?.id || ''));
 }
 
 function updateRiskUI(risk) {
@@ -227,32 +396,6 @@ function updateCommandsUI(commands) {
 }
 
 // === Simulation ===
-
-async function simulateScenario(mode) {
-  let humidity, power, plugOn, temperature;
-  switch (mode) {
-    case 'normal': humidity = 45 + Math.random()*20; power = 50 + Math.random()*100; temperature = 25 + Math.random()*8; plugOn = true; break;
-    case 'warning': humidity = 76 + Math.random()*10; power = 810 + Math.random()*100; temperature = 41 + Math.random()*6; plugOn = true; break;
-    case 'critical': humidity = 91 + Math.random()*8; power = 960 + Math.random()*40; temperature = 51 + Math.random()*8; plugOn = true; break;
-  }
-  const timestamp = new Date().toISOString();
-  async function updateEntity(entityId, body) {
-    try {
-      const res = await fetch(`${ORION_URL}/v2/entities/${entityId}/attrs`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (!res.ok) throw new Error(`${res.status}`);
-    } catch {
-      try { await fetch(`${ORION_URL}/v2/entities/${entityId}/attrs?options=append`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
-      catch (e) { console.error(`Error updating ${entityId}:`, e); }
-    }
-  }
-  await Promise.all([
-    updateEntity('urn:ngsi-ld:MatterDevice:3_1', { temperature: { type: 'Number', value: temperature, metadata: { unit: { type: 'string', value: '°C' }, timestamp: { type: 'string', value: timestamp } } } }),
-    updateEntity('urn:ngsi-ld:MatterDevice:1_1', { measuredValue: { type: 'Number', value: humidity, metadata: { unit: { type: 'string', value: '%RH' }, timestamp: { type: 'string', value: timestamp } } } }),
-    updateEntity('urn:ngsi-ld:MatterDevice:2_1', { onOff: { type: 'Boolean', value: plugOn }, activePower: { type: 'Number', value: power, metadata: { unit: { type: 'string', value: 'W' }, timestamp: { type: 'string', value: timestamp } } } })
-  ]);
-  try { await fetch(`${MCP_URL}/evaluate`, { method: 'POST' }); } catch {}
-  console.log(`[Sim] ${mode}: temp=${temperature.toFixed(1)}°C, humidity=${humidity.toFixed(1)}%, power=${power.toFixed(0)}W`);
-}
 
 async function simulateScenario(mode) {
   const res = await fetch(`${MCP_URL}/tools/simulate_scenario`, {

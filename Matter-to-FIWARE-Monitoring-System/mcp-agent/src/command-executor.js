@@ -3,10 +3,10 @@ class CommandExecutor {
     this.executions = [];
   }
 
-  async execute(deviceId, action, reason) {
+  async execute(deviceId, action, reason, options = {}) {
     const commandId = `cmd-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const timestamp = new Date().toISOString();
-    const status = 'SIMULATED_ACK';
+    const status = options.status || 'PENDING';
 
     const execution = {
       id: `urn:ngsi-ld:CommandExecution:${commandId}`,
@@ -16,7 +16,8 @@ class CommandExecutor {
       action: { type: 'Text', value: action },
       reason: { type: 'Text', value: reason },
       status: { type: 'Text', value: status },
-      source: { type: 'Text', value: 'simulator' },
+      source: { type: 'Text', value: options.source || 'unknown' },
+      error: { type: 'Text', value: options.error || '' },
       timestamp: { type: 'DateTime', value: timestamp }
     };
 

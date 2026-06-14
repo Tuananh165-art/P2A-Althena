@@ -160,14 +160,32 @@ async function skillDeviceControl(msg) {
       params: { type: 'SmartPlug', zone: 'A' }
     });
     const plugs = devices.filter(d => d.type === 'SmartPlug');
-    if (plugs.length !== 1) {
+    if (plugs.length === 0) {
       return {
-        text: `Found ${plugs.length} smart plugs. Please specify the device before control.`,
+        text: `No smart plugs found in Zone A.`,
         skill: 'device-control'
       };
     }
-    deviceId = plugs[0].id;
-    deviceName = 'Smart Plug';
+    
+    let targetPlug = null;
+    if (plugs.length > 1) {
+      if (msg.includes('ac') || msg.includes('air') || msg.includes('lanh') || msg.includes('dieu hoa')) {
+        targetPlug = plugs.find(p => p.id.toLowerCase().includes('ac'));
+      } else if (msg.includes('server') || msg.includes('chu')) {
+        targetPlug = plugs.find(p => p.id.toLowerCase().includes('server'));
+      } else if (msg.includes('fan') || msg.includes('quat')) {
+        targetPlug = plugs.find(p => p.id.toLowerCase().includes('fan'));
+      }
+      
+      if (!targetPlug) {
+        targetPlug = plugs.find(p => p.id.toLowerCase().includes('ac')) || plugs[0];
+      }
+    } else {
+      targetPlug = plugs[0];
+    }
+    
+    deviceId = targetPlug.id;
+    deviceName = targetPlug.id.split(':').pop().replace(/_/g, ' ');
   } else {
     return {
       text: 'Which device? I can control the Smart Plug.\nTry: "Turn on the smart plug"',

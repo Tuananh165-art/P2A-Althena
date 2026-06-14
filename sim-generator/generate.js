@@ -40,7 +40,7 @@ const SCENARIOS = {
     label: 'Overload',
     temperature: t => 26 + noise(0, 2),
     humidity: t => 40 + noise(0, 10),
-    plugPower: t => 160 + noise(0, 90),
+    plugPower: t => 160 + Math.min(800, t / 5 * 100) + noise(0, 90), // Ramp power high for overload
     voltage: t => 228 - Math.min(8, t / 100) + noise(0, 1.2),
     powerFactor: t => 0.85 + noise(0, 0.06),
     riskLevel: () => 'high',
@@ -55,7 +55,7 @@ const SCENARIOS = {
     voltage: t => 230 + noise(0, 1),
     powerFactor: t => 0.97 + noise(0, 0.02),
     riskLevel: () => 'low',
-    offlineDevice: 'SmartPlug:002',
+    offlineDevice: 'urn:ngsi-ld:SmartPlug:ZoneA_Room102_Server',
     badDataChance: 0.01
   },
   noisy: {
@@ -72,10 +72,17 @@ const SCENARIOS = {
 };
 
 const DEVICES = {
-  plugs: ['SmartPlug:001', 'SmartPlug:002', 'SmartPlug:003'],
-  temperatures: ['TemperatureSensor:room-12', 'TemperatureSensor:outdoor-01'],
-  humidity: ['HumiditySensor:room-12'],
-  zone: 'Zone:floor1'
+  plugs: [
+    'urn:ngsi-ld:SmartPlug:ZoneA_Room102_AC',
+    'urn:ngsi-ld:SmartPlug:ZoneA_Room102_Server',
+    'urn:ngsi-ld:SmartPlug:ZoneA_Room102_Fan'
+  ],
+  temperatures: [
+    'urn:ngsi-ld:TemperatureSensor:ZoneA_Room102_Wiring',
+    'urn:ngsi-ld:TemperatureSensor:ZoneA_Outdoor_Ambient'
+  ],
+  humidity: ['urn:ngsi-ld:HumiditySensor:ZoneA_Room102_Sensor1'],
+  zone: 'urn:ngsi-ld:Zone:ZoneA'
 };
 
 const scenario = SCENARIOS[scenarioName];
@@ -114,7 +121,6 @@ async function main() {
     }
 
     if (outputFile && tick < eventCount - 1) {
-      // wait between tick generations only when writing sequentially and not in a direct send loop
       await wait(intervalMs);
     }
   }
@@ -140,21 +146,23 @@ function buildEntitiesForTick(tick, timestamp, duration, scenario) {
   const zoneAttrs = {
     id: DEVICES.zone,
     type: 'Zone',
-    totalActivePower: entityValue(zonePower, 'Number', 'W'),
-    voltageDrop: entityValue(Math.max(0.5, 3 + (230 - averageVoltage(tick, scenario)) / 2), 'Number', 'V'),
-    riskLevel: entityValue(scenario.riskLevel(tick), 'Text'),
+    totalActivePower: entityValue(zonePower, 'Number', 'W', timestamp),
+    voltageDrop: entityValue(Math.max(0.5, 3 + (230 - averageVoltage(tick, scenario)) / 2), 'Number', 'V', timestamp),
+    riskLevel: entityValue(scenario.riskLevel(tick), 'Text', null, timestamp),
     timestamp: entityValue(timestamp, 'DateTime')
   };
   entities.push(zoneAttrs);
 
   DEVICES.temperatures.forEach(deviceId => {
-    const tempValue = scenario.temperature(tick) + (deviceId.includes('outdoor') ? 4 : 0) + noise(0, 0.6);
+    const tempValue = scenario.temperature(tick) + (deviceId.includes('Outdoor') ? 4 : 0) + noise(0, 0.6);
     const battery = 80 + noise(0, 5);
+    const zoneVal = deviceId.includes('Outdoor') ? 'Outdoor' : 'A';
     entities.push({
       id: deviceId,
       type: 'TemperatureSensor',
-      temperature: entityValue(round(tempValue, 1), 'Number', 'C'),
-      battery: entityValue(Math.min(100, Math.max(0, round(battery, 0))), 'Integer', '%'),
+      temperature: entityValue(round(tempValue, 1), 'Number', 'C', timestamp),
+      battery: entityValue(Math.min(100, Math.max(0, round(battery, 0))), 'Integer', '%', timestamp),
+      zone: entityValue(zoneVal, 'Text'),
       timestamp: entityValue(timestamp, 'DateTime')
     });
   });
@@ -163,7 +171,8 @@ function buildEntitiesForTick(tick, timestamp, duration, scenario) {
     entities.push({
       id: deviceId,
       type: 'HumiditySensor',
-      humidity: entityValue(round(scenario.humidity(tick), 1), 'Number', '%'),
+      measuredValue: entityValue(round(scenario.humidity(tick), 1), 'Number', '%RH', timestamp),
+      zone: entityValue('A', 'Text'),
       timestamp: entityValue(timestamp, 'DateTime')
     });
   });
@@ -178,11 +187,12 @@ function buildEntitiesForTick(tick, timestamp, duration, scenario) {
     entities.push({
       id: deviceId,
       type: 'SmartPlug',
-      onOff: entityValue(onOff, 'Boolean'),
-      activePower: entityValue(round(activePower, 1), 'Number', 'W'),
-      powerFactor: entityValue(round(scenario.powerFactor(tick), 2), 'Number'),
-      voltage: entityValue(round(averageVoltage(tick, scenario), 1), 'Number', 'V'),
-      currentEstimate: entityValue(round(currentEstimate, 2), 'Number', 'A'),
+      onOff: entityValue(onOff, 'Boolean', null, timestamp),
+      activePower: entityValue(round(activePower, 1), 'Number', 'W', timestamp),
+      powerFactor: entityValue(round(scenario.powerFactor(tick), 2), 'Number', null, timestamp),
+      voltage: entityValue(round(averageVoltage(tick, scenario), 1), 'Number', 'V', timestamp),
+      currentEstimate: entityValue(round(currentEstimate, 2), 'Number', 'A', timestamp),
+      zone: entityValue('A', 'Text'),
       timestamp: entityValue(timestamp, 'DateTime')
     });
   });
@@ -196,25 +206,34 @@ function buildEntitiesForTick(tick, timestamp, duration, scenario) {
 
 function buildBadPayload(timestamp) {
   const badEntity = {
-    id: 'SmartPlug:999',
+    id: 'urn:ngsi-ld:SmartPlug:ZoneA_Room102_BadPlug',
     type: 'SmartPlug',
-    onOff: entityValue(true, 'Boolean'),
-    activePower: entityValue(-5, 'Number', 'W'),
-    powerFactor: entityValue(1.5, 'Number'),
-    voltage: entityValue(999, 'Number', 'V'),
-    currentEstimate: entityValue(null, 'Number', 'A'),
+    onOff: entityValue(true, 'Boolean', null, timestamp),
+    activePower: entityValue(-5, 'Number', 'W', timestamp),
+    powerFactor: entityValue(1.5, 'Number', null, timestamp),
+    voltage: entityValue(999, 'Number', 'V', timestamp),
+    currentEstimate: entityValue(null, 'Number', 'A', timestamp),
+    zone: entityValue('A', 'Text'),
     timestamp: entityValue(timestamp, 'DateTime')
   };
   if (verbose) {
-    console.log('  Generated noisy payload: SmartPlug:999 with invalid values');
+    console.log('  Generated noisy payload: urn:ngsi-ld:SmartPlug:ZoneA_Room102_BadPlug with invalid values');
   }
   return badEntity;
 }
 
-function entityValue(value, type, unit) {
+function entityValue(value, type, unit, timestamp) {
   const attr = { value };
   if (type) attr.type = type;
-  if (unit) attr.metadata = { unit: { value: unit } };
+  if (unit || timestamp) {
+    attr.metadata = {};
+    if (unit) {
+      attr.metadata.unit = { type: 'string', value: unit };
+    }
+    if (timestamp) {
+      attr.metadata.timestamp = { type: 'string', value: timestamp };
+    }
+  }
   return attr;
 }
 

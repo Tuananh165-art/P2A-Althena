@@ -21,7 +21,7 @@ Start-Sleep -Seconds 5
 $orionReady = $false
 for ($i = 0; $i -lt 12; $i++) {
     try {
-        $r = Invoke-WebRequest -Uri "http://localhost:1026/version" -TimeoutSec 3 -ErrorAction Stop
+        $r = Invoke-WebRequest -Uri "http://localhost:1026/version" -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
         if ($r.StatusCode -eq 200) {
             $orionReady = $true
             break

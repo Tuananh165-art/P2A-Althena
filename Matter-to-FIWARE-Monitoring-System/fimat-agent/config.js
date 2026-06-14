@@ -22,7 +22,8 @@ module.exports = {
   // FIMAT Agent
   agent: {
     port: process.env.AGENT_PORT || 3000,
-    logLevel: process.env.LOG_LEVEL || 'info'
+    logLevel: process.env.LOG_LEVEL || 'info',
+    legacyEmulatorsEnabled: process.env.ENABLE_LEGACY_MATTER_EMULATORS === 'true'
   },
 
   // Mapping chuẩn Matter sang NGSI-v2

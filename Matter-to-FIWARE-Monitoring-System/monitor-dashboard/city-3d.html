@@ -6,34 +6,26 @@
     <title>3D City - Climate Resilience Copilot</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="common.css">
-    <link rel="stylesheet" href="city-3d.css?v=10">
+    <link rel="stylesheet" href="dashboard.css?v=4">
+    <link rel="stylesheet" href="ops-pages.css?v=1">
+    <link rel="stylesheet" href="city-3d.css?v=14">
 </head>
-<body class="city3d-body">
+<body class="city3d-body ops-page">
+<div class="ops-shell city3d-shell">
+<aside data-ops-sidebar></aside>
+<main class="ops-main city3d-main">
 <div class="city3d-app">
-    <div class="header city3d-header">
+    <header class="ops-topbar city3d-header">
         <div>
-            <h1>3D City Incident View</h1>
-            <p>Pick a zone, then inspect the building response.</p>
+            <span class="ops-kicker">Zone A / Spatial operations</span>
+            <h1>3D Incident View</h1>
         </div>
-        <button class="city3d-back" id="city-back-zone" type="button">Zone map</button>
-    </div>
-
-    <div class="status-bar city3d-status">
-        <div class="status-item">
-            <span class="status-dot disconnected" id="orion-status"></span>
-            <span class="status-label">Orion</span>
-            <span id="orion-text">Checking...</span>
+        <div class="ops-top-actions">
+            <div class="live-indicator"><span></span> Live spatial monitoring</div>
+            <div class="last-update">Updated <strong id="last-update">--</strong></div>
+            <button class="city3d-back" id="city-back-zone" type="button">Zone map</button>
         </div>
-        <div class="status-item">
-            <span class="status-dot disconnected" id="mcp-status"></span>
-            <span class="status-label">MCP Agent</span>
-            <span id="mcp-text">Checking...</span>
-        </div>
-        <div class="status-item">
-            <span class="status-label">Last update</span>
-            <span id="last-update">--</span>
-        </div>
-    </div>
+    </header>
 
     <main class="city3d-stage">
         <section class="city3d-viewport" aria-label="3D zone and building incident visualization">
@@ -135,14 +127,33 @@
         </aside>
     </main>
 </div>
+</main>
+</div>
 
-<script src="common.js"></script>
-<script src="nav.js"></script>
+<script src="common.js?v=4"></script>
+<script src="nav.js?v=3"></script>
 <script>
-    renderNav('city3d');
+    if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        document.body.classList.add('city3d-embed');
+    } else {
+        renderOpsSidebar('city3d');
+    }
     checkOrionConnection();
     checkMCPConnection();
 </script>
-<script type="module" src="city-3d.js?v=10"></script>
+<script type="module" src="city-3d.js?v=23"></script>
+<div id="debug-error-box" style="display:none; position:fixed; bottom:10px; left:10px; right:10px; background:rgba(220,38,38,0.95); color:white; padding:12px; font-family:monospace; font-size:12px; z-index:9999; border-radius:6px; border:1px solid #ef4444; max-height:200px; overflow-y:auto; box-shadow:0 10px 15px -3px rgba(0,0,0,0.5)">
+    <strong>[JavaScript Error]</strong> <span id="debug-error-msg"></span>
+</div>
+<script>
+    window.addEventListener('error', function(e) {
+        const box = document.getElementById('debug-error-box');
+        const msg = document.getElementById('debug-error-msg');
+        if (box && msg) {
+            box.style.display = 'block';
+            msg.innerHTML = `${e.message}<br><small>at ${e.filename || 'module'}:${e.lineno || '?'}:${e.colno || '?'}</small>`;
+        }
+    });
+</script>
 </body>
 </html>

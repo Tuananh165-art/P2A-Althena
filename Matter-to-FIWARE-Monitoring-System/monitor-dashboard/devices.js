@@ -1,8 +1,74 @@
 /* Devices page logic */
 document.addEventListener('DOMContentLoaded', () => {
-  renderNav('devices');
+  window.deviceControlResults = window.deviceControlResults || {};
   checkOrionConnection();
   setInterval(() => fetchEntities(processEntities), REFRESH_INTERVAL);
+  fetchEntities(processEntities);
+
+  const grid = document.getElementById('devices-grid');
+  grid?.addEventListener('click', async event => {
+    const button = event.target.closest('.device-power-button');
+    if (!button || button.disabled) return;
+
+    const deviceId = decodeURIComponent(button.dataset.deviceId);
+    const action = button.dataset.action;
+    const result = button.parentElement.querySelector('.device-control-result');
+    const originalLabel = button.querySelector('span:last-child').textContent;
+
+    button.disabled = true;
+    button.classList.add('is-pending');
+    button.querySelector('span:last-child').textContent = 'Sending...';
+    if (result) {
+      result.textContent = 'Waiting for device state';
+      result.className = 'device-control-result pending';
+    }
+    window.deviceControlResults[deviceId] = {
+      text: 'Waiting for device state',
+      className: 'pending'
+    };
+
+    try {
+      const response = await fetch(`${MCP_URL}/tools/invoke_command`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deviceId,
+          action,
+          reason: 'Manual operator control from Devices page',
+          requestedBy: 'dashboard',
+          confirmed: true
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
+
+      const status = payload.status?.value || payload.status || 'PENDING';
+      const error = payload.error?.value || payload.error || '';
+      if (result) {
+        result.textContent = error ? `${status}: ${error}` : status;
+        result.className = `device-control-result ${String(status).toLowerCase()}`;
+      }
+      window.deviceControlResults[deviceId] = {
+        text: error ? `${status}: ${error}` : status,
+        className: String(status).toLowerCase()
+      };
+
+      await fetchEntities(processEntities);
+    } catch (error) {
+      if (result) {
+        result.textContent = `FAILED: ${error.message}`;
+        result.className = 'device-control-result failed';
+      }
+      window.deviceControlResults[deviceId] = {
+        text: `FAILED: ${error.message}`,
+        className: 'failed'
+      };
+      button.querySelector('span:last-child').textContent = originalLabel;
+    } finally {
+      button.disabled = false;
+      button.classList.remove('is-pending');
+    }
+  });
 
   const panels = document.getElementById('info-panels');
   if (panels) {
