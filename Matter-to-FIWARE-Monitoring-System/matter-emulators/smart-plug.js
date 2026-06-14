@@ -16,6 +16,12 @@ class SmartPlugEmulator extends EventEmitter {
     this.onOff = config.initialState || false;
     this.power = config.initialPower || 0;
     this.interval = config.interval || 3000;
+    this.manualOverrideUntil = 0;
+    this.randomToggle = config.randomToggle === true;
+    this.randomToggleChance = config.randomToggleChance ?? 0.03;
+    this.minRandomToggleIntervalMs = config.minRandomToggleIntervalMs ?? 60000;
+    this.lastRandomToggleAt = Date.now();
+    this.powerRange = config.powerRange || { min: 80, max: 650 };
   }
 
   start() {
@@ -26,13 +32,15 @@ class SmartPlugEmulator extends EventEmitter {
   startSimulation() {
     // Phát sự kiện thay đổi trạng thái và công suất định kỳ
     setInterval(() => {
+      const now = Date.now();
       // Ngẫu nhiên bật/tắt hoặc đổi công suất
-      if (Math.random() > 0.7) {
-        this.onOff = !this.onOff;
-      }
+      // Keep demo state stable by default. Commands/scenarios should own ON/OFF.
+      this.maybeRandomToggle(now);
 
       // Nếu đang bật, công suất ngẫu nhiên từ 50-1000W
-      this.power = this.onOff ? Math.round(Math.random() * 950 + 50) : 0;
+      if (now > this.manualOverrideUntil) {
+        this.power = this.onOff ? this.randomPowerDraw() : 0;
+      }
 
       const events = [
         {
@@ -64,6 +72,24 @@ class SmartPlugEmulator extends EventEmitter {
   }
 
   // Bật/tắt ổ cắm
+  maybeRandomToggle(now = Date.now()) {
+    const commandHoldDone = now > this.manualOverrideUntil;
+    const cooldownDone = now - this.lastRandomToggleAt >= this.minRandomToggleIntervalMs;
+    if (!this.randomToggle || !commandHoldDone || !cooldownDone) return false;
+    if (Math.random() >= this.randomToggleChance) return false;
+
+    this.onOff = !this.onOff;
+    this.lastRandomToggleAt = now;
+    console.log(`[SmartPlug] Random user-like toggle: ${this.onOff ? 'ON' : 'OFF'}`);
+    return true;
+  }
+
+  randomPowerDraw() {
+    const min = this.powerRange.min ?? 80;
+    const max = this.powerRange.max ?? 650;
+    return Math.round(Math.random() * (max - min) + min);
+  }
+
   toggle() {
     this.onOff = !this.onOff;
     console.log(`[SmartPlug] Trạng thái ổ cắm: ${this.onOff ? 'BẬT' : 'TẮT'}`);
@@ -78,6 +104,35 @@ class SmartPlugEmulator extends EventEmitter {
       attributeValue: this.onOff,
       timestamp: new Date().toISOString()
     });
+  }
+
+  setOnOff(value, options = {}) {
+    this.onOff = Boolean(value);
+    this.manualOverrideUntil = Date.now() + (options.holdMs || 30000);
+    console.log(`[SmartPlug] State: ${this.onOff ? 'ON' : 'OFF'}`);
+    this.power = this.onOff ? (options.power || 500) : 0;
+
+    const timestamp = new Date().toISOString();
+    this.emit('data_change', {
+      type: 'attribute_change',
+      nodeId: this.nodeId,
+      endpointId: this.endpointId,
+      clusterId: this.onOffClusterId,
+      attributeName: 'onOff',
+      attributeValue: this.onOff,
+      timestamp
+    });
+    this.emit('data_change', {
+      type: 'attribute_change',
+      nodeId: this.nodeId,
+      endpointId: this.endpointId,
+      clusterId: this.electricalClusterId,
+      attributeName: 'activePower',
+      attributeValue: this.power,
+      unit: 'W',
+      timestamp
+    });
+    return this.getStatus();
   }
 
   getStatus() {

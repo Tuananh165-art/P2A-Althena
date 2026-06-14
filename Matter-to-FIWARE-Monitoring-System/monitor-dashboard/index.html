@@ -3,128 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Climate Resilience Copilot — Dashboard</title>
+    <title>Climate Resilience Copilot - Operations</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="dashboard.css?v=4">
 </head>
-<body>
-<div class="container">
-    <div class="header">
-        <h1>Climate Resilience Copilot</h1>
-        <p>AI-Powered Electrical Fire Detection — IoT x FIWARE x MCP</p>
-    </div>
+<body class="ops-body">
+<div class="ops-shell">
+    <aside class="ops-sidebar">
+        <a class="ops-brand" href="index.html" aria-label="Climate Resilience Copilot">
+            <span class="ops-brand-mark">CR</span>
+            <span>
+                <strong>Climate Resilience</strong>
+                <small>Operations Copilot</small>
+            </span>
+        </a>
 
-    <div class="status-bar">
-        <div class="status-item">
-            <span class="status-dot disconnected" id="orion-status"></span>
-            <span class="status-label">Orion</span>
-            <span id="orion-text">Checking...</span>
-        </div>
-        <div class="status-item">
-            <span class="status-dot disconnected" id="mcp-status"></span>
-            <span class="status-label">MCP Agent</span>
-            <span id="mcp-text">Checking...</span>
-        </div>
-        <div class="status-item">
-            <span class="status-label">Last update</span>
-            <span id="last-update">--</span>
-        </div>
-    </div>
+        <nav class="ops-nav" aria-label="Main navigation">
+            <a class="active" href="index.html"><span>Overview</span></a>
+            <a href="city-3d.html"><span>3D Zones</span></a>
+            <a href="devices.html"><span>Devices</span></a>
+            <a href="alerts.html"><span>Alerts</span></a>
+            <a href="simulator.html"><span>Simulator</span></a>
+            <a href="chat.html"><span>AI Chat</span></a>
+        </nav>
 
-    <!-- Risk Assessment -->
-    <div class="section risk-section">
-        <h3>Fire Risk Assessment</h3>
-        <div class="risk-zone-card normal" id="risk-zone-card">
-            <div class="risk-score-ring">
-                <div class="risk-score-value" id="risk-score-value">--</div>
-                <div class="risk-score-label">Score</div>
+        <div class="ops-sidebar-status">
+            <span class="sidebar-eyebrow">System</span>
+            <div class="sidebar-health-row">
+                <span class="status-dot disconnected" id="orion-status"></span>
+                <span>Orion</span>
+                <strong id="orion-text">Checking...</strong>
             </div>
-            <div class="risk-details">
-                <div class="risk-level" id="risk-level">NO DATA</div>
-                <div class="risk-rationale" id="risk-rationale">Waiting for data...</div>
-                <div class="risk-actions" id="risk-actions"></div>
+            <div class="sidebar-health-row">
+                <span class="status-dot disconnected" id="mcp-status"></span>
+                <span>MCP Agent</span>
+                <strong id="mcp-text">Checking...</strong>
             </div>
+            <a class="sidebar-chat-link" href="chat.html">Open Copilot</a>
         </div>
-    </div>
+    </aside>
 
-    <!-- Device Cards -->
-    <div class="devices-grid">
-        <div class="device-card fire-risk">
-            <div class="device-header">
-                <h2>Temperature Sensor</h2>
-                <span class="device-id">Node 3</span>
+    <main class="ops-main">
+        <header class="ops-topbar">
+            <div>
+                <span class="ops-kicker">Zone A / Building A1</span>
+                <h1>Electrical Fire Operations</h1>
             </div>
-            <div class="device-content">
-                <div class="metric">
-                    <span class="metric-label">Ambient</span>
-                    <span class="metric-value" id="temp-value">--</span>
-                    <span class="metric-unit">&deg;C</span>
+            <div class="ops-top-actions">
+                <div class="live-indicator"><span></span> Live monitoring</div>
+                <div class="last-update">Updated <strong id="last-update">--</strong></div>
+                <a class="icon-action" href="city-3d.html" title="Open full 3D view" aria-label="Open full 3D view">↗</a>
+            </div>
+        </header>
+
+        <section class="ops-content">
+            <div class="ops-summary-grid">
+                <article class="summary-tile risk-summary">
+                    <div class="summary-heading">
+                        <span>Fire risk</span>
+                        <strong id="summary-risk-level">NO DATA</strong>
+                    </div>
+                    <div class="summary-value">
+                        <span id="summary-risk-score">--</span><small>/100</small>
+                    </div>
+                    <div class="risk-meter"><span id="summary-risk-meter"></span></div>
+                </article>
+
+                <article class="summary-tile">
+                    <div class="summary-heading"><span>Peak temperature</span><em id="summary-temp-state">Waiting</em></div>
+                    <div class="summary-value"><span id="summary-temp">--</span><small>°C</small></div>
+                    <div class="mini-sparkline" id="temp-sparkline"></div>
+                </article>
+
+                <article class="summary-tile">
+                    <div class="summary-heading"><span>Peak humidity</span><em id="summary-humidity-state">Waiting</em></div>
+                    <div class="summary-value"><span id="summary-humidity">--</span><small>%RH</small></div>
+                    <div class="mini-sparkline" id="humidity-sparkline"></div>
+                </article>
+
+                <article class="summary-tile">
+                    <div class="summary-heading"><span>Total controlled load</span><em id="summary-plug-state">--</em></div>
+                    <div class="summary-value"><span id="summary-power">--</span><small>W</small></div>
+                    <div class="power-state-line"><span id="summary-power-line"></span></div>
+                </article>
+            </div>
+
+            <div class="ops-primary-grid">
+                <section class="ops-panel zone-panel">
+                    <div class="ops-panel-header">
+                        <div>
+                            <span class="panel-kicker">Live spatial context</span>
+                            <h2>Zone A incident view</h2>
+                        </div>
+                        <a href="city-3d.html">Open full view</a>
+                    </div>
+                    <div class="zone-frame">
+                        <iframe src="city-3d.html?embed=1&v=24" title="Live 3D Zone A monitoring"></iframe>
+                    </div>
+                    <div class="zone-legend">
+                        <span><i class="legend-dot normal"></i>Normal</span>
+                        <span><i class="legend-dot warning"></i>Warning</span>
+                        <span><i class="legend-dot critical"></i>Critical</span>
+                        <span><i class="legend-dot off"></i>Power isolated</span>
+                    </div>
+                </section>
+
+                <section class="ops-panel incident-panel">
+                    <div class="ops-panel-header">
+                        <div>
+                            <span class="panel-kicker">Live decisions</span>
+                            <h2>Incident timeline</h2>
+                        </div>
+                        <a href="alerts.html">All alerts</a>
+                    </div>
+                    <div class="timeline-block">
+                        <h3>Recent alerts</h3>
+                        <div class="alerts-container" id="alerts-container"><p class="no-alerts">No alerts</p></div>
+                    </div>
+                    <div class="timeline-block">
+                        <h3>Control actions</h3>
+                        <div class="commands-container" id="commands-container"><p class="no-data">No commands</p></div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="ops-secondary-grid">
+                <section class="ops-panel">
+                    <div class="ops-panel-header">
+                        <div>
+                            <span class="panel-kicker">Current assessment</span>
+                            <h2>Why the system is acting</h2>
+                        </div>
+                    </div>
+                    <div class="risk-zone-card normal" id="risk-zone-card">
+                        <div class="risk-score-ring">
+                            <div class="risk-score-value" id="risk-score-value">--</div>
+                            <div class="risk-score-label">Score</div>
+                        </div>
+                        <div class="risk-details">
+                            <div class="risk-level" id="risk-level">NO DATA</div>
+                            <div class="risk-rationale" id="risk-rationale">Waiting for data...</div>
+                            <div class="risk-actions" id="risk-actions"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ops-panel control-panel">
+                    <div class="ops-panel-header">
+                        <div>
+                            <span class="panel-kicker">Demo controls</span>
+                            <h2>Run an incident</h2>
+                        </div>
+                    </div>
+                    <div class="scenario-switcher" role="group" aria-label="Simulation scenarios">
+                        <button class="btn-simulate btn-normal" data-mode="normal">Normal</button>
+                        <button class="btn-simulate btn-warning" data-mode="warning">Warning</button>
+                        <button class="btn-simulate btn-critical" data-mode="critical">Critical</button>
+                    </div>
+                    <button class="evaluate-action" id="evaluate-action">Evaluate now</button>
+                    <p>Critical mode demonstrates automatic load isolation through MCP.</p>
+                </section>
+            </div>
+
+            <section class="ops-panel devices-panel">
+                <div class="ops-panel-header">
+                    <div>
+                        <span class="panel-kicker">Matter devices</span>
+                        <h2>Live device state</h2>
+                    </div>
+                    <a href="devices.html">Manage devices</a>
                 </div>
-                <div class="progress-bar"><div class="progress-fill" id="temp-progress" style="width:0%"></div></div>
-                <div class="status-info" id="temp-status">Waiting for data...</div>
-            </div>
-        </div>
-        <div class="device-card">
-            <div class="device-header">
-                <h2>Smart Plug</h2>
-                <span class="device-id">Node 2</span>
-            </div>
-            <div class="device-content">
-                <div class="metric">
-                    <span class="metric-label">Status</span>
-                    <span class="status-badge off" id="plug-status">OFF</span>
+                <div class="devices-grid" id="devices-grid" data-device-controls="true">
+                    <p class="loading">Discovering devices in Orion Context Broker...</p>
                 </div>
-                <div class="metric">
-                    <span class="metric-label">Power</span>
-                    <span class="metric-value" id="power-value">0</span>
-                    <span class="metric-unit">W</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" id="power-progress" style="width:0%"></div></div>
-            </div>
-        </div>
-        <div class="device-card">
-            <div class="device-header">
-                <h2>Humidity Sensor</h2>
-                <span class="device-id">Node 1</span>
-            </div>
-            <div class="device-content">
-                <div class="metric">
-                    <span class="metric-label">Humidity</span>
-                    <span class="metric-value" id="humidity-value">--</span>
-                    <span class="metric-unit">%RH</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" id="humidity-progress" style="width:0%"></div></div>
-                <div class="status-info" id="humidity-status">Waiting for data...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Simulation -->
-    <div class="section simulate-section">
-        <h3>Simulation Control</h3>
-        <div class="simulate-buttons">
-            <button class="btn-simulate btn-normal" onclick="simulateScenario('normal')">Normal</button>
-            <button class="btn-simulate btn-warning" onclick="simulateScenario('warning')">Warning</button>
-            <button class="btn-simulate btn-critical" onclick="simulateScenario('critical')">Critical</button>
-            <button class="btn-simulate btn-evaluate" onclick="triggerEvaluate()">Force Evaluate</button>
-        </div>
-    </div>
-
-    <!-- Mini Alerts -->
-    <div class="section">
-        <h3>Recent Alerts</h3>
-        <div class="alerts-container" id="alerts-container"><p class="no-alerts">No alerts</p></div>
-    </div>
-
-    <!-- Mini Commands -->
-    <div class="section">
-        <h3>Recent Commands</h3>
-        <div class="commands-container" id="commands-container"><p class="no-data">No commands</p></div>
-    </div>
+            </section>
+        </section>
+    </main>
 </div>
 
-<script src="common.js"></script>
-<script src="nav.js"></script>
-<script src="dashboard.js"></script>
+<script src="common.js?v=6"></script>
+<script src="dashboard.js?v=5"></script>
 </body>
 </html>

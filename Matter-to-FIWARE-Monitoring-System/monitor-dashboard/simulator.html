@@ -6,8 +6,9 @@
     <title>Simulator — Climate Resilience Copilot</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="workspace.css?v=1">
 </head>
-<body>
+<body class="workspace-body">
 <div class="container">
     <div class="header">
         <h1>Scenario Simulator</h1>
@@ -44,13 +45,7 @@
         </p>
     </div>
 
-    <!-- Risk Score Reference -->
-    <div class="section">
-        <h3>Reference</h3>
-        <div id="info-panels"></div>
-    </div>
-
-    <!-- Debug JSON -->
+    <div class="page-grid equal">
     <div class="section debug-section">
         <h3>Raw Entity JSON</h3>
         <pre id="debug-json">Loading...</pre>
@@ -61,9 +56,10 @@
         <h3>Last Risk Evaluation</h3>
         <pre id="risk-json">Loading...</pre>
     </div>
+    </div>
 </div>
 
-<script src="common.js"></script>
+<script src="common.js?v=3"></script>
 <script src="nav.js"></script>
 <script src="simulator.js"></script>
 </body>

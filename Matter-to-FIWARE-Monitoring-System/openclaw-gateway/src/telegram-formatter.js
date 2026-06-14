@@ -65,12 +65,14 @@ function formatAlertPush(alert) {
 }
 
 function formatDeviceControl(result) {
-  const ok = result.status === 'ACK';
+  const value = v => (v && typeof v === 'object' && 'value' in v) ? v.value : v;
+  const statusValue = value(result.status);
+  const ok = statusValue === 'ACK' || statusValue === 'SIMULATED_ACK';
   const emoji = ok ? '✅' : '❌';
-  const action = escapeHtml(result.action || '');
-  const deviceId = escapeHtml(result.deviceId || '');
-  const status = escapeHtml(result.status || '');
-  const cmdId = escapeHtml(result.commandId || 'N/A');
+  const action = escapeHtml(value(result.action) || '');
+  const deviceId = escapeHtml(value(result.deviceId) || '');
+  const status = escapeHtml(statusValue || '');
+  const cmdId = escapeHtml(value(result.commandId) || 'N/A');
 
   return `${emoji} <b>Device Control</b>\n` +
     `Action: ${action}\n` +

@@ -5,9 +5,12 @@ const deviceTrails = {};
 const devicePositions = {};
 
 const DEFAULT_POSITIONS = {
-  'urn:ngsi-ld:MatterDevice:1_1': { lat: 10.8231, lng: 106.6297, name: 'Humidity Sensor', type: 'sensor' },
-  'urn:ngsi-ld:MatterDevice:2_1': { lat: 10.8245, lng: 106.6310, name: 'Smart Plug', type: 'plug' },
-  'urn:ngsi-ld:MatterDevice:3_1': { lat: 10.8220, lng: 106.6285, name: 'Temperature Sensor', type: 'temp' }
+  'urn:ngsi-ld:HumiditySensor:ZoneA_Room102_Sensor1': { lat: 10.8231, lng: 106.6297, name: 'Humidity Sensor', type: 'sensor' },
+  'urn:ngsi-ld:SmartPlug:ZoneA_Room102_AC': { lat: 10.8245, lng: 106.6310, name: 'Smart Plug (AC)', type: 'plug' },
+  'urn:ngsi-ld:SmartPlug:ZoneA_Room102_Server': { lat: 10.8250, lng: 106.6320, name: 'Smart Plug (Server)', type: 'plug' },
+  'urn:ngsi-ld:SmartPlug:ZoneA_Room102_Fan': { lat: 10.8240, lng: 106.6300, name: 'Smart Plug (Fan)', type: 'plug' },
+  'urn:ngsi-ld:TemperatureSensor:ZoneA_Room102_Wiring': { lat: 10.8220, lng: 106.6285, name: 'Temperature Sensor', type: 'temp' },
+  'urn:ngsi-ld:TemperatureSensor:ZoneA_Outdoor_Ambient': { lat: 10.8260, lng: 106.6330, name: 'Ambient Temp', type: 'temp' }
 };
 
 const ZONE_A_COORDS = [
@@ -88,18 +91,41 @@ function createDeviceMarker(entityId, pos) {
 
 function updateMapFromEntities() {
   Object.entries(state.entities).forEach(([entityId, entity]) => {
-    if (!devicePositions[entityId]) return;
-    if (entity.location?.value?.coordinates) {
+    if (!['HumiditySensor', 'SmartPlug', 'TemperatureSensor'].includes(entity.type)) return;
+    if (isLegacyMatterEntity(entity)) return;
+
+    if (!devicePositions[entityId]) {
+      // Dynamic placement inside Zone A if no coordinates exist
+      let lat = 10.8231 + (Math.random() - 0.5) * 0.003;
+      let lng = 106.6297 + (Math.random() - 0.5) * 0.003;
+      if (entity.location?.value?.coordinates) {
+        const [elng, elat] = entity.location.value.coordinates;
+        lat = elat;
+        lng = elng;
+      }
+      const typeMap = { HumiditySensor: 'sensor', SmartPlug: 'plug', TemperatureSensor: 'temp' };
+      const shortId = entityId.split(':').pop().replace(/_/g, ' ');
+
+      devicePositions[entityId] = {
+        lat,
+        lng,
+        name: shortId,
+        type: typeMap[entity.type] || 'sensor',
+        history: []
+      };
+      createDeviceMarker(entityId, devicePositions[entityId]);
+    } else if (entity.location?.value?.coordinates) {
       const [lng, lat] = entity.location.value.coordinates;
       devicePositions[entityId].lat = lat;
       devicePositions[entityId].lng = lng;
       updateMarkerPosition(entityId);
     }
+
     const marker = deviceMarkers[entityId];
     if (marker) {
       let popup = `<div class="popup-title">${devicePositions[entityId].name}</div>`;
       for (const key in entity) {
-        if (key === 'id' || key === 'type' || key === 'location') continue;
+        if (key === 'id' || key === 'type' || key === 'location' || key === 'zone') continue;
         const val = entity[key].value !== undefined ? entity[key].value : entity[key];
         popup += `<div class="popup-attr">${key}: ${typeof val === 'number' ? val.toFixed(1) : val}</div>`;
       }

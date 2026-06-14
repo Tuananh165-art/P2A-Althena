@@ -12,12 +12,19 @@ class MatterController extends EventEmitter {
   constructor() {
     super();
     this.connectedDevices = new Map();
+    this.deviceInstances = new Map();
     this.emulators = [];
     this.isRunning = false;
   }
 
   async initialize() {
     console.log('[MatterController] Initializing connection to Matter Emulators...');
+
+    if (process.env.ENABLE_LEGACY_MATTER_EMULATORS !== 'true') {
+      this.isRunning = true;
+      console.log('[MatterController] Legacy Node 1/2/3 emulators are disabled.');
+      return true;
+    }
 
     try {
       // Import emulator classes from matter-emulators directory
@@ -38,6 +45,10 @@ class MatterController extends EventEmitter {
         nodeId: 2,
         endpointId: 1,
         initialState: false,
+        randomToggle: true,
+        randomToggleChance: 0.03,
+        minRandomToggleIntervalMs: 60000,
+        powerRange: { min: 80, max: 650 },
         interval: 3000
       });
 
@@ -73,6 +84,9 @@ class MatterController extends EventEmitter {
       this.registerDevice(1, 'HumiditySensor');
       this.registerDevice(2, 'SmartPlug');
       this.registerDevice(3, 'TemperatureSensor');
+      this.deviceInstances.set('1', humiditySensor);
+      this.deviceInstances.set('2', smartPlug);
+      this.deviceInstances.set('3', temperatureSensor);
 
       // Start emulators
       humiditySensor.start();
@@ -121,7 +135,6 @@ class MatterController extends EventEmitter {
 
     let plugState = false;
     setInterval(() => {
-      if (Math.random() > 0.8) plugState = !plugState;
       this.emit('device_event', {
         type: 'attribute_change', nodeId: 2, deviceType: 'SmartPlug',
         endpointId: 1, clusterId: 0x0006,
@@ -161,6 +174,74 @@ class MatterController extends EventEmitter {
   getDeviceTypeByNodeId(nodeId) {
     const device = this.connectedDevices.get(String(nodeId));
     return device ? device.deviceType : 'Device';
+  }
+
+  async controlDevice(nodeId, action) {
+    const id = String(nodeId);
+    const device = this.connectedDevices.get(id);
+    if (!device) {
+      throw new Error(`Device not found: ${nodeId}`);
+    }
+    if (device.deviceType !== 'SmartPlug') {
+      throw new Error(`Device type ${device.deviceType} does not support control`);
+    }
+    if (!['TURN_ON', 'TURN_OFF'].includes(action)) {
+      throw new Error(`Unsupported action: ${action}`);
+    }
+
+    const instance = this.deviceInstances.get(id);
+    if (!instance || typeof instance.setOnOff !== 'function') {
+      throw new Error(`Device ${nodeId} has no control adapter`);
+    }
+
+    const state = instance.setOnOff(action === 'TURN_ON', { holdMs: 300000 });
+    return {
+      status: 'SIMULATED_ACK',
+      source: 'fimat-emulator',
+      nodeId: Number(nodeId),
+      action,
+      state,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  async applyScenario(scenario, options = {}) {
+    const scenarios = {
+      normal: { temperature: 29, humidity: 55, power: 120, plugOn: true },
+      warning: { temperature: 44, humidity: 82, power: 860, plugOn: true },
+      critical: { temperature: 55, humidity: 95, power: 980, plugOn: true }
+    };
+    const values = scenarios[scenario];
+    if (!values) {
+      throw new Error(`Unsupported scenario: ${scenario}`);
+    }
+
+    const holdMs = options.holdMs || 120000;
+    const humidity = this.deviceInstances.get('1');
+    const smartPlug = this.deviceInstances.get('2');
+    const temperature = this.deviceInstances.get('3');
+    if (!humidity?.setHumidity || !smartPlug?.setOnOff || !temperature?.setTemperature) {
+      throw new Error('Scenario adapters are not available');
+    }
+
+    const states = {
+      humidity: humidity.setHumidity(values.humidity, { holdMs }),
+      smartPlug: smartPlug.setOnOff(values.plugOn, {
+        holdMs,
+        power: values.power
+      }),
+      temperature: temperature.setTemperature(values.temperature, { holdMs })
+    };
+
+    return {
+      status: 'SCENARIO_HELD',
+      source: 'fimat-emulator',
+      scenario,
+      holdMs,
+      values,
+      states,
+      timestamp: new Date().toISOString()
+    };
   }
 
   disconnect() {

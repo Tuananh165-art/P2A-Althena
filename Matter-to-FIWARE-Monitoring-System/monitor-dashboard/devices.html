@@ -3,94 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Devices — Climate Resilience Copilot</title>
+    <title>Devices - Climate Resilience Copilot</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="dashboard.css?v=4">
+    <link rel="stylesheet" href="workspace.css?v=2">
+    <link rel="stylesheet" href="ops-pages.css?v=1">
 </head>
-<body>
-<div class="container">
-    <div class="header">
-        <h1>Device Monitor</h1>
-        <p>IoT Sensor Telemetry — Matter/Thread via FIWARE Orion</p>
-    </div>
-    <div class="status-bar">
-        <div class="status-item">
-            <span class="status-dot disconnected" id="orion-status"></span>
-            <span class="status-label">Orion</span>
-            <span id="orion-text">Checking...</span>
-        </div>
-        <div class="status-item">
-            <span class="status-label">Last update</span>
-            <span id="last-update">--</span>
-        </div>
-    </div>
+<body class="ops-page">
+<div class="ops-shell">
+    <aside data-ops-sidebar></aside>
+    <main class="ops-main">
+        <header class="ops-topbar">
+            <div>
+                <span class="ops-kicker">Zone A / Device inventory</span>
+                <h1>Live Device State</h1>
+            </div>
+            <div class="ops-topbar-status">
+                <div class="live-indicator"><span></span> Live monitoring</div>
+                <div class="last-update">Updated <strong id="last-update">--</strong></div>
+            </div>
+        </header>
 
-    <!-- Info Panels -->
-    <div class="section">
-        <div id="info-panels"></div>
-    </div>
+        <div class="ops-page-content">
+            <section class="section page-intro">
+                <div>
+                    <h3>Canonical domain inventory</h3>
+                    <p class="page-intro-copy">Sensors and controlled electrical loads registered for Zone A. Legacy Node 1/2/3 emulator entities are excluded.</p>
+                </div>
+            </section>
 
-    <!-- Device Cards -->
-    <div class="devices-grid">
-        <div class="device-card fire-risk">
-            <div class="device-header">
-                <h2>Temperature Sensor</h2>
-                <span class="device-id">0x0402 &mdash; Node 3</span>
+            <div class="devices-grid" id="devices-grid" data-device-controls="true">
+                <p class="loading">Discovering devices in Orion Context Broker...</p>
             </div>
-            <div class="device-content">
-                <div class="metric">
-                    <span class="metric-label">Ambient</span>
-                    <span class="metric-value" id="temp-value">--</span>
-                    <span class="metric-unit">&deg;C</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" id="temp-progress" style="width:0%"></div></div>
-                <div class="status-info" id="temp-status">Waiting for data...</div>
-            </div>
-        </div>
-        <div class="device-card">
-            <div class="device-header">
-                <h2>Smart Plug</h2>
-                <span class="device-id">0x0006 + 0x0B04 &mdash; Node 2</span>
-            </div>
-            <div class="device-content">
-                <div class="metric">
-                    <span class="metric-label">Status</span>
-                    <span class="status-badge off" id="plug-status">OFF</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Power</span>
-                    <span class="metric-value" id="power-value">0</span>
-                    <span class="metric-unit">W</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" id="power-progress" style="width:0%"></div></div>
-            </div>
-        </div>
-        <div class="device-card">
-            <div class="device-header">
-                <h2>Humidity Sensor</h2>
-                <span class="device-id">0x0405 &mdash; Node 1</span>
-            </div>
-            <div class="device-content">
-                <div class="metric">
-                    <span class="metric-label">Humidity</span>
-                    <span class="metric-value" id="humidity-value">--</span>
-                    <span class="metric-unit">%RH</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" id="humidity-progress" style="width:0%"></div></div>
-                <div class="status-info" id="humidity-status">Waiting for data...</div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Entities List -->
-    <div class="section">
-        <h3>Orion Entities</h3>
-        <div class="entities-list" id="entities-list"><p class="loading">Loading...</p></div>
-    </div>
+            <section class="section">
+                <details class="technical-details">
+                    <summary>Show Orion entity details</summary>
+                    <div class="entities-list" id="entities-list"><p class="loading">Loading...</p></div>
+                </details>
+            </section>
+        </div>
+    </main>
 </div>
 
-<script src="common.js"></script>
-<script src="nav.js"></script>
-<script src="devices.js"></script>
+<script src="common.js?v=5"></script>
+<script src="nav.js?v=3"></script>
+<script src="devices.js?v=3"></script>
+<script>
+    renderOpsSidebar('devices');
+    checkMCPConnection();
+</script>
 </body>
 </html>

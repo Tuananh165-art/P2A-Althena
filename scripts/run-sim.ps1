@@ -7,7 +7,7 @@ param(
 )
 
 $base = Split-Path -Parent $PSScriptRoot
-$generator = Join-Path $base '..\sim-generator\generate.js'
+$generator = Join-Path $base 'sim-generator\generate.js'
 $node = 'node'
 
 if (-not (Test-Path $generator)) {

@@ -6,8 +6,9 @@
     <title>Alerts — Climate Resilience Copilot</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="workspace.css?v=1">
 </head>
-<body>
+<body class="workspace-body">
 <div class="container">
     <div class="header">
         <h1>Alerts &amp; Commands</h1>
@@ -26,12 +27,7 @@
         </div>
     </div>
 
-    <!-- Info Panels -->
-    <div class="section">
-        <div id="info-panels"></div>
-    </div>
-
-    <!-- Filter Bar -->
+    <div class="page-grid">
     <div class="section">
         <h3>Alert Timeline</h3>
         <div class="filter-bar">
@@ -46,14 +42,14 @@
         <div class="alerts-container" id="alerts-container" style="max-height:600px"><p class="no-alerts">No alerts</p></div>
     </div>
 
-    <!-- Commands -->
     <div class="section">
         <h3>Command Log</h3>
         <div class="commands-container" id="commands-container" style="max-height:400px"><p class="no-data">No commands</p></div>
     </div>
+    </div>
 </div>
 
-<script src="common.js"></script>
+<script src="common.js?v=3"></script>
 <script src="nav.js"></script>
 <script src="alerts.js"></script>
 </body>

@@ -16,6 +16,7 @@ class HumiditySensorEmulator extends EventEmitter {
     this.humidity = config.initialHumidity || 50;
     this.interval = config.interval || 5000;
     this.humidityKey = 'measuredValue'; // NGSI Attribute name
+    this.manualOverrideUntil = 0;
   }
 
   start() {
@@ -28,7 +29,9 @@ class HumiditySensorEmulator extends EventEmitter {
   startSimulation() {
     // Phát tín hiệu định kỳ - độ ẩm tăng từ 50% đến 95% (mô phỏng tình huống ngập)
     setInterval(() => {
-      this.humidity += Math.random() * 5;
+      if (Date.now() > this.manualOverrideUntil) {
+        this.humidity += Math.random() * 5;
+      }
       
       // Cap mức độ ẩm từ 0-100
       if (this.humidity > 100) this.humidity = 100;
@@ -59,6 +62,22 @@ class HumiditySensorEmulator extends EventEmitter {
       message: 'Humidity exceeds 90% - Flood detected!',
       timestamp: new Date().toISOString()
     });
+  }
+
+  setHumidity(value, options = {}) {
+    this.humidity = Math.max(0, Math.min(100, Number(value)));
+    this.manualOverrideUntil = Date.now() + (options.holdMs || 60000);
+    const event = {
+      type: 'attribute_change',
+      nodeId: this.nodeId,
+      endpointId: this.endpointId,
+      clusterId: this.clusterId,
+      attributeName: this.humidityKey,
+      attributeValue: Math.round(this.humidity * 100) / 100,
+      timestamp: new Date().toISOString()
+    };
+    this.emit('data_change', event);
+    return this.getStatus();
   }
 
   getStatus() {

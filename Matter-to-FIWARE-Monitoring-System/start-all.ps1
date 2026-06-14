@@ -3,9 +3,9 @@ Write-Host 'Starting all services...' -ForegroundColor Green
 
 $basePath = $PSScriptRoot
 $proxyFile = Join-Path $basePath 'proxy-server.js'
-$emulatorsDir = Join-Path $basePath 'matter-emulators'
 $dashboardDir = Join-Path $basePath 'monitor-dashboard'
 $mcpAgentDir = Join-Path $basePath 'mcp-agent'
+$zigbeeBridgeDir = Join-Path $basePath 'zigbee-bridge'
 $openClawDir = Join-Path $basePath 'openclaw-gateway'
 $openClawSkillsDir = Join-Path (Split-Path $basePath -Parent) 'openclaw-skills'
 $dashboardPort = 8001
@@ -15,16 +15,16 @@ if (-not (Test-Path $proxyFile)) {
     Write-Host "Missing file: $proxyFile" -ForegroundColor Red
     exit 1
 }
-if (-not (Test-Path $emulatorsDir)) {
-    Write-Host "Missing folder: $emulatorsDir" -ForegroundColor Red
-    exit 1
-}
 if (-not (Test-Path $dashboardDir)) {
     Write-Host "Missing folder: $dashboardDir" -ForegroundColor Red
     exit 1
 }
 if (-not (Test-Path $mcpAgentDir)) {
     Write-Host "Missing folder: $mcpAgentDir" -ForegroundColor Red
+    exit 1
+}
+if (-not (Test-Path $zigbeeBridgeDir)) {
+    Write-Host "Missing folder: $zigbeeBridgeDir" -ForegroundColor Red
     exit 1
 }
 if (-not (Test-Path $openClawDir)) {
@@ -36,10 +36,7 @@ if (-not (Test-Path $openClawSkillsDir)) {
     exit 1
 }
 
-# Kill existing node processes
-Write-Host 'Stopping old Node processes...' -ForegroundColor Yellow
-Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 2
+# Existing processes are left intact. Each service owns its configured port.
 
 # Start Orion + Mongo via Docker Compose
 Write-Host 'Starting Orion + Mongo via docker compose...' -ForegroundColor Yellow
@@ -71,15 +68,21 @@ Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location 
 
 Start-Sleep -Seconds 2
 
-# Start Matter Emulators in background
-Write-Host 'Starting Matter Emulators...' -ForegroundColor Cyan
-Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location '$emulatorsDir'; npm start" -WindowStyle Normal
+# Start FIMAT Agent in background
+Write-Host 'Starting FIMAT Agent (port 3000)...' -ForegroundColor Cyan
+Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "`$env:ENABLE_LEGACY_MATTER_EMULATORS='false'; Set-Location '$basePath\fimat-agent'; npm start" -WindowStyle Normal
+
+Start-Sleep -Seconds 2
+
+# Start Zigbee Bridge in background
+Write-Host 'Starting Zigbee Bridge (port 3003)...' -ForegroundColor Cyan
+Start-Process powershell.exe -ArgumentList '-Command', "Set-Location '$zigbeeBridgeDir'; npm start" -WindowStyle Hidden
 
 Start-Sleep -Seconds 2
 
 # Start MCP Agent in background
-Write-Host 'Starting MCP Agent (port 3002)...' -ForegroundColor Cyan
-Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location '$mcpAgentDir'; npm start" -WindowStyle Normal
+Write-Host 'Starting MCP Agent in live device mode (port 3002)...' -ForegroundColor Cyan
+Start-Process powershell.exe -ArgumentList '-Command', "`$env:DEVICE_CONTROL_MODE='live'; Set-Location '$mcpAgentDir'; npm start" -WindowStyle Hidden
 
 Start-Sleep -Seconds 2
 
@@ -91,13 +94,14 @@ Start-Sleep -Seconds 2
 
 # Start Dashboard HTTP Server in background
 Write-Host "Starting Dashboard (port $dashboardPort)..." -ForegroundColor Cyan
-Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location '$dashboardDir'; npx http-server -a localhost -p $dashboardPort" -WindowStyle Normal
+Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location '$dashboardDir'; npx -y http-server -a localhost -p $dashboardPort -c-1" -WindowStyle Normal
 
 Write-Host "`nAll services started.`n" -ForegroundColor Green
 Write-Host "Dashboard: $dashboardUrl" -ForegroundColor Cyan
 Write-Host 'Proxy: http://localhost:3001' -ForegroundColor Cyan
-Write-Host 'Orion: http://localhost:1026' -ForegroundColor Cyan
-Write-Host 'MCP Agent: http://localhost:3002/health' -ForegroundColor Cyan
+Write-Host 'FIMAT Agent:    http://localhost:3000/health' -ForegroundColor Cyan
+Write-Host 'MCP Agent:      http://localhost:3002/health' -ForegroundColor Cyan
+Write-Host 'Zigbee Bridge:  http://localhost:3003/health' -ForegroundColor Cyan
 Write-Host 'OpenClaw Gateway: http://localhost:3004/health' -ForegroundColor Cyan
 Write-Host "`nWaiting 10 seconds for services to warm up..." -ForegroundColor Yellow
 Start-Sleep -Seconds 10
@@ -107,7 +111,9 @@ Write-Host "`nChecking connectivity..." -ForegroundColor Yellow
 
 $proxyTest = $false
 $orionTest = $false
+$fimatTest = $false
 $mcpTest = $false
+$zigbeeTest = $false
 $openClawTest = $false
 
 try {
@@ -131,6 +137,28 @@ try {
 }
 
 try {
+    $response = Invoke-WebRequest -Uri 'http://localhost:3000/health' -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
+    if ($response.StatusCode -eq 200) {
+        Write-Host 'FIMAT Agent: OK' -ForegroundColor Green
+        $fimatTest = $true
+    }
+} catch {
+    Write-Host 'FIMAT Agent: FAILED' -ForegroundColor Red
+}
+
+try {
+    $zigbeeHealth = Invoke-RestMethod -Uri 'http://localhost:3003/health' -TimeoutSec 3 -ErrorAction Stop
+    if ($zigbeeHealth.status -eq 'ok' -and $zigbeeHealth.mqttConnected) {
+        Write-Host 'Zigbee Bridge: OK (MQTT connected)' -ForegroundColor Green
+        $zigbeeTest = $true
+    } else {
+        Write-Host 'Zigbee Bridge: RUNNING, MQTT NOT CONNECTED' -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host 'Zigbee Bridge: FAILED' -ForegroundColor Red
+}
+
+try {
     $response = Invoke-WebRequest -Uri 'http://localhost:3002/health' -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
     if ($response.StatusCode -eq 200) {
         Write-Host 'MCP Agent: OK' -ForegroundColor Green
@@ -150,10 +178,13 @@ try {
     Write-Host 'OpenClaw Gateway: FAILED' -ForegroundColor Red
 }
 
-if ($proxyTest -and $orionTest -and $mcpTest -and $openClawTest) {
+if ($proxyTest -and $orionTest -and $fimatTest -and $zigbeeTest -and $mcpTest -and $openClawTest) {
     Write-Host "`nAll services are running. Open: $dashboardUrl" -ForegroundColor Green
 } else {
     Write-Host "`nSome services failed. Check the opened console windows." -ForegroundColor Yellow
 }
 
-Read-Host -Prompt 'Press Enter to close'
+Write-Host "Keeping services alive. Press Ctrl+C to stop."
+while ($true) {
+    Start-Sleep -Seconds 1
+}

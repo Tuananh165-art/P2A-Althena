@@ -156,8 +156,36 @@ async function skillDeviceControl(msg) {
   msg = normalizeText(msg);
 
   if (msg.includes('plug') || msg.includes('switch') || msg.includes('o cam')) {
-    deviceId = 'urn:ngsi-ld:MatterDevice:2_1';
-    deviceName = 'Smart Plug';
+    const { data: devices } = await axios.get(`${MCP_URL}/tools/query_entities`, {
+      params: { type: 'SmartPlug', zone: 'A' }
+    });
+    const plugs = devices.filter(d => d.type === 'SmartPlug');
+    if (plugs.length === 0) {
+      return {
+        text: `No smart plugs found in Zone A.`,
+        skill: 'device-control'
+      };
+    }
+    
+    let targetPlug = null;
+    if (plugs.length > 1) {
+      if (msg.includes('ac') || msg.includes('air') || msg.includes('lanh') || msg.includes('dieu hoa')) {
+        targetPlug = plugs.find(p => p.id.toLowerCase().includes('ac'));
+      } else if (msg.includes('server') || msg.includes('chu')) {
+        targetPlug = plugs.find(p => p.id.toLowerCase().includes('server'));
+      } else if (msg.includes('fan') || msg.includes('quat')) {
+        targetPlug = plugs.find(p => p.id.toLowerCase().includes('fan'));
+      }
+      
+      if (!targetPlug) {
+        targetPlug = plugs.find(p => p.id.toLowerCase().includes('ac')) || plugs[0];
+      }
+    } else {
+      targetPlug = plugs[0];
+    }
+    
+    deviceId = targetPlug.id;
+    deviceName = targetPlug.id.split(':').pop().replace(/_/g, ' ');
   } else {
     return {
       text: 'Which device? I can control the Smart Plug.\nTry: "Turn on the smart plug"',
@@ -177,7 +205,11 @@ async function skillDeviceControl(msg) {
   }
 
   const { data: result } = await axios.post(`${MCP_URL}/tools/invoke_command`, {
-    deviceId, action, reason: 'User requested via OpenClaw Telegram'
+    deviceId,
+    action,
+    reason: 'User requested via OpenClaw Telegram',
+    confirmed: true,
+    requestedBy: 'openclaw-telegram'
   });
 
   return { text: fmt.formatDeviceControl(result), skill: 'device-control' };
@@ -227,10 +259,15 @@ async function skillSimulate(msg) {
   else if (msg.includes('warning')) mode = 'warning';
   else if (msg.includes('critical') || msg.includes('fire')) mode = 'critical';
 
-  const { data: result } = await axios.post(`${MCP_URL}/evaluate`);
+  const { data: result } = await axios.post(`${MCP_URL}/tools/simulate_scenario`, {
+    scenario: mode,
+    zone: 'A',
+    requestedBy: 'openclaw-telegram',
+    confirmed: true
+  });
 
   return {
-    text: fmt.formatSimulate(mode, `Mode: ${mode}`),
+    text: fmt.formatSimulate(mode, `Mode: ${mode}; audit=${result.auditId || 'N/A'}`),
     skill: 'simulate-scenario'
   };
 }

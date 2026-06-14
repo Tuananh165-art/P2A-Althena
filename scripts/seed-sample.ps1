@@ -1,10 +1,10 @@
 param(
-    [string]$InputFile = '..\sim-seed\small-batch.json',
+    [string]$InputFile = 'sim-seed\small-batch.json',
     [string]$OrionUrl = 'http://localhost:1026'
 )
 
 $base = Split-Path -Parent $PSScriptRoot
-$seedScript = Join-Path $base '..\sim-generator\seed-orion.js'
+$seedScript = Join-Path $base 'sim-generator\seed-orion.js'
 $node = 'node'
 
 if (-not (Test-Path $seedScript)) {

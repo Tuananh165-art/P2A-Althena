@@ -39,7 +39,24 @@ if (Test-Endpoint "MCP /health" "http://localhost:3002/health") { $pass++ } else
 if (Test-Endpoint "MCP /risk" "http://localhost:3002/risk") { $pass++ } else { $fail++ }
 
 # Dashboard
-if (Test-Endpoint "Dashboard" "http://localhost:8080") { $pass++ } else { $fail++ }
+$dashboardOk = $false
+try {
+    $r = Invoke-WebRequest -Uri "http://localhost:8080" -TimeoutSec 3 -ErrorAction Stop -UseBasicParsing
+    if ($r.StatusCode -eq 200) {
+        Write-Host "  PASS  Dashboard (http://localhost:8080)" -ForegroundColor Green
+        $dashboardOk = $true
+    }
+} catch {
+    try {
+        $r = Invoke-WebRequest -Uri "http://localhost:8001" -TimeoutSec 3 -ErrorAction Stop -UseBasicParsing
+        if ($r.StatusCode -eq 200) {
+            Write-Host "  PASS  Dashboard (http://localhost:8001)" -ForegroundColor Green
+            $dashboardOk = $true
+        }
+    } catch {}
+}
+
+if ($dashboardOk) { $pass++ } else { Write-Host "  FAIL  Dashboard not responding on 8080 or 8001" -ForegroundColor Red; $fail++ }
 
 # Entity checks
 Write-Host "`n--- Entity Checks ---" -ForegroundColor Cyan

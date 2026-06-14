@@ -8,6 +8,21 @@ module.exports = {
     port: process.env.MCP_PORT || 3002,
     pollInterval: parseInt(process.env.MCP_POLL_INTERVAL) || 5000
   },
+  fimat: {
+    host: process.env.FIMAT_HOST || 'localhost',
+    port: process.env.FIMAT_PORT || 3000,
+    baseUrl: () => `http://${module.exports.fimat.host}:${module.exports.fimat.port}`
+  },
+  zigbee: {
+    host: process.env.ZIGBEE_BRIDGE_HOST || 'localhost',
+    port: process.env.ZIGBEE_BRIDGE_PORT || 3003,
+    baseUrl: () => `http://${module.exports.zigbee.host}:${module.exports.zigbee.port}`
+  },
+  control: {
+    mode: process.env.DEVICE_CONTROL_MODE || 'live',
+    confirmationTimeoutMs: parseInt(process.env.DEVICE_CONFIRMATION_TIMEOUT_MS) || 8000,
+    confirmationPollMs: parseInt(process.env.DEVICE_CONFIRMATION_POLL_MS) || 400
+  },
   risk: {
     thresholds: {
       humidity: { warning: 75, critical: 90 },
