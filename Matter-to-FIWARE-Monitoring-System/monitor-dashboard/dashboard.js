@@ -89,18 +89,12 @@ function refreshDashboard() {
 }
 
 function updateDashboardMetrics(entities) {
-  entities = entities.filter(entity => !isLegacyMatterEntity(entity));
-  const temperatureSensors = entities.filter(entity => entity.type === 'TemperatureSensor');
-  const humiditySensors = entities.filter(entity => entity.type === 'HumiditySensor');
-  const controlledLoads = entities.filter(entity => entity.type === 'SmartPlug');
-
-  const tempValue = maxEntityValue(temperatureSensors, 'temperature');
-  const humidityValue = maxEntityValue(humiditySensors, 'measuredValue');
-  const powerValue = controlledLoads.reduce((total, entity) => total + Number(getEntityValue(entity, 'activePower') || 0), 0);
-  const poweredLoads = controlledLoads.filter(entity => {
-    const val = getEntityValue(entity, 'onOff');
-    return val === true || val === 'true' || val === 'ON' || val === 'on' || val === 1 || val === '1';
-  }).length;
+  const metrics = getLiveZoneMetrics(entities, 'A');
+  const tempValue = metrics.maxTemperature;
+  const humidityValue = metrics.maxHumidity;
+  const powerValue = metrics.maxPower;
+  const poweredLoads = metrics.poweredLoads;
+  const controlledLoads = metrics.controlledLoads;
 
   setDashboardText('summary-temp', formatMetric(tempValue, 1));
   setDashboardText('summary-humidity', formatMetric(humidityValue, 1));
@@ -114,7 +108,7 @@ function updateDashboardMetrics(entities) {
 
   const powerLine = document.getElementById('summary-power-line');
   if (powerLine) {
-    powerLine.style.width = `${Math.min(100, Math.max(0, Number(powerValue || 0) / 30))}%`;
+    powerLine.style.width = `${Math.min(100, Math.max(0, Number(powerValue || 0) / 10))}%`;
     powerLine.style.background = poweredLoads > 0 ? '#43c7cc' : '#667386';
   }
 
@@ -173,11 +167,7 @@ async function runDashboardAction(button, action) {
 
 function getEntityValue(entity, attribute) {
   if (!entity) return undefined;
-  const value = entity[attribute];
-  if (value && typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, 'value')) {
-    return value.value;
-  }
-  return value;
+  return ngsiValue(entity[attribute]);
 }
 
 function maxEntityValue(entities, attribute) {

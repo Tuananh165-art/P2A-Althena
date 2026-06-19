@@ -11,12 +11,16 @@ class AIReasoner {
     this.apiKey = process.env.AI_API_KEY || '';
     this.model = process.env.AI_MODEL || 'gpt-4o-mini';
     this.analysisEnabled = process.env.AI_ANALYZE_ENABLED === '1';
+    this.chatRequiresAI = process.env.AI_CHAT_REQUIRE_AI === 'true';
+    this.disableThinking = process.env.AI_DISABLE_THINKING !== 'false';
 
-    if (endpoint && !endpoint.includes('/chat/completions')) {
+    const hasCompletionPath = /\/(chat\/completions|messages|responses)$/i.test(endpoint.replace(/\/+$/, ''));
+    if (endpoint && !hasCompletionPath) {
       endpoint = endpoint.replace(/\/+$/, '');
       endpoint += endpoint.endsWith('/v1') ? '/chat/completions' : '/v1/chat/completions';
     }
     this.endpoint = endpoint;
+    this.usesMessagesApi = /\/messages$/i.test(this.endpoint);
     this.enabled = !!(this.endpoint && this.apiKey);
     if (this.enabled) {
       console.log(`[AIReasoner] Enabled: ${this.model} via ${this.endpoint}`);
@@ -35,32 +39,20 @@ class AIReasoner {
 
     try {
       const prompt = this.buildPrompt(metrics, ruleResult);
-      const response = await axios.post(
-        this.endpoint,
-        {
-          model: this.model,
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an electrical fire risk analyst. You analyze IoT sensor data (temperature, power consumption, humidity) to detect fire risk caused by climate change-driven heat waves causing electrical overload. Respond ONLY with valid JSON, no other text.'
-            },
-            { role: 'user', content: prompt }
-          ],
-          max_tokens: 1500,
-          temperature: 0.3
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
+      const response = await this.postCompletion(
+        [
+          {
+            role: 'system',
+            content: 'You are an electrical fire risk analyst. You analyze IoT sensor data (temperature, power consumption, humidity) to detect fire risk caused by climate change-driven heat waves causing electrical overload. Respond ONLY with valid JSON, no other text.'
           },
-          timeout: parseInt(process.env.AI_ANALYZE_TIMEOUT_MS) || 20000
-        }
+          { role: 'user', content: prompt }
+        ],
+        1500,
+        0.3,
+        parseInt(process.env.AI_ANALYZE_TIMEOUT_MS) || 20000
       );
 
-      const choice = response.data.choices?.[0]?.message;
-      const content = choice?.content || '';
-      const rawContent = content || choice?.reasoning_content || '';
+      const rawContent = this.extractResponseText(response.data);
       return this.parseAIResponse(rawContent, ruleResult);
     } catch (e) {
       console.error(`[AIReasoner] API error: ${e.message}, falling back to rules`);
@@ -106,16 +98,27 @@ Respond with JSON: {"rationale": "1-2 sentence electrical fire risk explanation"
 
   async chat(userMessage, context = {}) {
     if (!this.enabled) {
+      if (this.chatRequiresAI) {
+        throw new Error('AI chat is required but AI_ENDPOINT or AI_API_KEY is not configured');
+      }
+      if (this.isFastLocalChat(userMessage)) {
+        return { text: this.ruleBasedChat(userMessage, context), source: 'rules-fast' };
+      }
       return { text: this.ruleBasedChat(userMessage, context), source: 'rules' };
     }
 
     try {
+      if (this.isFastLocalChat(userMessage)) {
+        return { text: this.ruleBasedChat(userMessage, context), source: 'rules-fast' };
+      }
+
       const lang = this.detectLanguage(userMessage);
       const systemPrompt = `You are Climate Resilience Claw, a natural Telegram copilot for a climate resilience monitoring system. You help the operator understand electrical fire risk from climate-driven heat waves using IoT data: temperature, power, humidity, device state, alerts, and service health.
 
 Personality and style:
 - Sound like a capable teammate, not a command menu.
 - Reply naturally and briefly unless the user asks for detail.
+- Keep normal chat replies under 6 short lines.
 - If the user writes Vietnamese, reply in Vietnamese. If they write English, reply in English.
 - Use the live context first. If live data is missing, clearly say you are using demo seed context.
 - Do not invent exact sensor values beyond the provided context.
@@ -132,38 +135,30 @@ Current system context:
 
 You MUST respond entirely in ${lang}. Be conversational, specific, and reference actual sensor values when available. Give actionable recommendations. Use plain text with short lines or simple bullet points only.`;
 
-      const response = await axios.post(
-        this.endpoint,
-        {
-          model: this.model,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userMessage }
-          ],
-          max_tokens: 800,
-          temperature: 0.5
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-          },
-          timeout: parseInt(process.env.AI_CHAT_TIMEOUT_MS) || 60000
-        }
+      const response = await this.postCompletion(
+        [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage }
+        ],
+        parseInt(process.env.AI_CHAT_MAX_TOKENS) || 360,
+        0.5,
+        parseInt(process.env.AI_CHAT_TIMEOUT_MS) || 20000
       );
 
-      const choice = response.data.choices?.[0]?.message;
-      const text = this.stripMarkdownBold(choice?.content || choice?.reasoning_content || 'No response from AI.');
+      const text = this.stripMarkdownBold(this.extractResponseText(response.data) || 'No response from AI.');
       return { text, source: 'ai' };
     } catch (e) {
-      console.error(`[AIReasoner] Chat API error: ${e.message}, falling back to rules`);
+      console.error(`[AIReasoner] Chat API error: ${e.message}`);
+      if (this.chatRequiresAI) {
+        throw e;
+      }
       return { text: this.ruleBasedChat(userMessage, context), source: 'rules' };
     }
   }
 
   detectLanguage(text) {
     const lowered = String(text || '').toLowerCase();
-    if (/\b(ban|toi|minh|rui ro|canh bao|trang thai|he thong|mo phong|o cam|chay)\b/.test(lowered)) return 'Vietnamese (Tieng Viet)';
+    if (/\b(ban|toi|minh|rui ro|canh bao|trang thai|he thong|mo phong|o cam|chay|ten|xin chao|chao)\b/.test(lowered)) return 'Vietnamese (Tieng Viet)';
     if (/[一-鿿]/.test(text)) return 'Chinese (中文)';
     if (/[Ѐ-ӿ]/.test(text)) return 'Russian (Русский)';
     if (/[가-힯]/.test(text)) return 'Korean (한국어)';
@@ -177,11 +172,103 @@ You MUST respond entirely in ${lang}. Be conversational, specific, and reference
     return String(text || '').replace(/\*\*(.*?)\*\*/g, '$1');
   }
 
+  isFastLocalChat(message) {
+    const msg = String(message || '').toLowerCase().trim();
+    return /^(hi|hello|hey|alo|chao|xin chao|bạn tên là gì|ban ten la gi|bạn là ai|ban la ai|who are you|what is your name|\?)$/.test(msg) ||
+      /\b(ten la gi|ban ten gi|ban la ai|your name|what is your name)\b/.test(msg);
+  }
+
+  postCompletion(messages, maxTokens, temperature, timeout) {
+    if (this.usesMessagesApi) {
+      const system = messages
+        .filter(message => message.role === 'system')
+        .map(message => message.content)
+        .join('\n\n');
+      const apiMessages = messages
+        .filter(message => message.role !== 'system')
+        .map(message => ({
+          role: message.role === 'assistant' ? 'assistant' : 'user',
+          content: message.content
+        }));
+
+      const payload = {
+        model: this.model,
+        system,
+        messages: apiMessages,
+        max_tokens: maxTokens,
+        temperature
+      };
+      if (this.disableThinking) {
+        payload.thinking = { type: 'disabled' };
+      }
+
+      return axios.post(
+        this.endpoint,
+        payload,
+        {
+          headers: {
+            'x-api-key': this.apiKey,
+            'anthropic-version': process.env.AI_ANTHROPIC_VERSION || '2023-06-01',
+            'Content-Type': 'application/json'
+          },
+          timeout
+        }
+      );
+    }
+
+    return axios.post(
+      this.endpoint,
+      {
+        model: this.model,
+        messages,
+        max_tokens: maxTokens,
+        temperature
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout
+      }
+    );
+  }
+
+  extractResponseText(data) {
+    const choice = data?.choices?.[0]?.message;
+    if (choice?.content || choice?.reasoning_content) {
+      return choice.content || choice.reasoning_content;
+    }
+
+    if (Array.isArray(data?.content)) {
+      const textParts = data.content
+        .filter(item => item?.type === 'text' && item.text)
+        .map(item => item.text);
+      if (textParts.length) return textParts.join('\n');
+    }
+
+    if (typeof data?.output_text === 'string') return data.output_text;
+    return '';
+  }
+
   ruleBasedChat(message, context, lang = 'English') {
     const msg = message.toLowerCase();
+    lang = this.detectLanguage(message);
     const risks = context.risks || [];
     const lines = [];
-    const vi = lang.includes('Vietnamese') || /\b(ban|toi|minh|rui ro|canh bao|trang thai|he thong|mo phong|o cam|chay)\b/.test(msg);
+    const vi = lang.includes('Vietnamese') || /\b(ban|toi|minh|rui ro|canh bao|trang thai|he thong|mo phong|o cam|chay|ten|xin chao|chao)\b/.test(msg);
+
+    if (/\b(hi|hello|hey|xin chao|chao|alo)\b/.test(msg)) {
+      return vi
+        ? 'Chao ban, minh la OpenClaw, copilot giam sat rui ro chay dien do nang nong va qua tai. Ban co the hoi minh ve rui ro Zone A, canh bao moi nhat, trang thai he thong, mo phong demo, hoac dieu khien o cam thong minh.'
+        : 'Hi, I am OpenClaw, the climate resilience copilot for electrical fire-risk monitoring. You can ask about Zone A risk, latest alerts, system health, demo simulations, or smart-plug control.';
+    }
+
+    if (/\b(ten la gi|ban ten gi|ban la ai|who are you|your name|what is your name)\b/.test(msg)) {
+      return vi
+        ? 'Minh la OpenClaw, copilot cua he thong Climate Resilience. Minh theo doi nhiet do, do am, cong suat tai va canh bao rui ro chay dien theo thoi gian thuc.'
+        : 'I am OpenClaw, the Climate Resilience copilot. I monitor temperature, humidity, power load, real-time alerts, and electrical fire risk.';
+    }
 
     if (msg.includes('what can you do') || msg.includes('help') || msg.includes('ban co the lam gi') || msg.includes('lam gi duoc')) {
       if (vi) {

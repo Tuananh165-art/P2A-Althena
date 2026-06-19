@@ -1546,6 +1546,7 @@ function normalizeDevice(entity) {
   return {
     id: entity.id || '',
     type: entity.type || '',
+    zone: ngsiValue(entity.zone) || 'A',
     label: (entity.displayName ? ngsiValue(entity.displayName) : '') || fallback.label || entity.type || '',
     onOff: isOnOff,
     power: entity.activePower ? Number(ngsiValue(entity.activePower) || 0) : 0,
@@ -1577,18 +1578,24 @@ function getRiskColor(level = getLevel()) {
 }
 
 function getSmartPlug(devices = getDevices()) {
-  return devices.find(device => device.id === affected.smartPlugId) ||
-    devices.find(device => device.type === 'SmartPlug');
+  const plugs = devices
+    .filter(device => device.type === 'SmartPlug' && (device.zone || 'A') === ui.selectedZone)
+    .sort((a, b) => Number(b.power || 0) - Number(a.power || 0));
+  return plugs.find(device => device.id === affected.smartPlugId) || plugs[0] || null;
 }
 
 function getTemperature(devices = getDevices()) {
-  return devices.find(device => device.id === affected.tempId) ||
-    devices.find(device => device.type === 'TemperatureSensor');
+  const sensors = devices
+    .filter(device => device.type === 'TemperatureSensor' && (device.zone || 'A') === ui.selectedZone)
+    .sort((a, b) => Number(b.temperature || 0) - Number(a.temperature || 0));
+  return sensors.find(device => device.id === affected.tempId) || sensors[0] || null;
 }
 
 function getHumidity(devices = getDevices()) {
-  return devices.find(device => device.id === affected.humidityId) ||
-    devices.find(device => device.type === 'HumiditySensor');
+  const sensors = devices
+    .filter(device => device.type === 'HumiditySensor' && (device.zone || 'A') === ui.selectedZone)
+    .sort((a, b) => Number(b.humidity || 0) - Number(a.humidity || 0));
+  return sensors.find(device => device.id === affected.humidityId) || sensors[0] || null;
 }
 
 function updateSceneFromLive() {
@@ -1782,14 +1789,15 @@ function updateReadouts(devices = [], risk = live.risk || {}) {
   setText('zone-a-state', risk.riskLevel ? String(risk.riskLevel).toUpperCase() : 'Live devices');
   setText('city-temp', ui.selectedZone === 'A' && temp?.temperature !== undefined ? `${Number(temp.temperature).toFixed(1)} C` : '-- C');
   setText('city-humidity', ui.selectedZone === 'A' && humidity?.humidity !== undefined ? `${Number(humidity.humidity).toFixed(1)} %RH` : '-- %RH');
+  const highestLoad = getSmartPlug(devices);
   const primaryLoad = getRoomLoad('primary');
-  const primaryLabel = primaryLoad
-    ? String(ngsiValue(primaryLoad.displayName) || ngsiValue(primaryLoad.name) || primaryLoad.id).split(':').pop()
+  const highestLabel = highestLoad
+    ? String(highestLoad.label || highestLoad.id).split(':').pop()
     : 'Controlled load';
-  setText('city-plug', ui.selectedZone === 'A' && primaryLoad
-    ? normalizeOnOff(primaryLoad.onOff) !== false
-      ? `${primaryLabel} ON - powered`
-      : `${primaryLabel} OFF - isolated`
+  setText('city-plug', ui.selectedZone === 'A' && highestLoad
+    ? highestLoad.onOff !== false
+      ? `${highestLabel} ON - ${Number(highestLoad.power || 0).toFixed(0)} W`
+      : `${highestLabel} OFF - isolated`
     : '--');
   setText('city-rationale', ui.selectedZone === 'A'
     ? risk.rationale || 'Waiting for MCP risk evaluation.'

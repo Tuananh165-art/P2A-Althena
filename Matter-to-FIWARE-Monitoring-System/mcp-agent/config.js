@@ -8,6 +8,10 @@ module.exports = {
     port: process.env.MCP_PORT || 3002,
     pollInterval: parseInt(process.env.MCP_POLL_INTERVAL) || 5000
   },
+  openclaw: {
+    alertWebhookUrl: process.env.OPENCLAW_ALERT_WEBHOOK_URL || 'http://localhost:3004/webhook/alert',
+    alertWebhookEnabled: process.env.OPENCLAW_ALERT_WEBHOOK_ENABLED !== 'false'
+  },
   fimat: {
     host: process.env.FIMAT_HOST || 'localhost',
     port: process.env.FIMAT_PORT || 3000,
@@ -22,6 +26,12 @@ module.exports = {
     mode: process.env.DEVICE_CONTROL_MODE || 'live',
     confirmationTimeoutMs: parseInt(process.env.DEVICE_CONFIRMATION_TIMEOUT_MS) || 8000,
     confirmationPollMs: parseInt(process.env.DEVICE_CONFIRMATION_POLL_MS) || 400
+  },
+  safety: {
+    requireOperatorApproval: process.env.REQUIRE_OPERATOR_APPROVAL !== 'false',
+    autoCriticalActions: process.env.AUTO_CRITICAL_ACTIONS === 'true',
+    escalationFirstReminderSec: parseInt(process.env.ESCALATION_FIRST_REMINDER_SEC) || 30,
+    escalationBackupSec: parseInt(process.env.ESCALATION_BACKUP_SEC) || 60
   },
   risk: {
     thresholds: {

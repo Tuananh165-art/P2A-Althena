@@ -349,6 +349,55 @@ function isLegacyMatterEntity(entity) {
   return /^urn:ngsi-ld:MatterDevice:[123]_1$/.test(String(entity?.id || ''));
 }
 
+function ngsiValue(attr, fallback = undefined) {
+  return attr && typeof attr === 'object' && Object.prototype.hasOwnProperty.call(attr, 'value')
+    ? attr.value
+    : (attr ?? fallback);
+}
+
+function normalizeOnOffValue(value) {
+  return value === true || value === 'true' || value === 'ON' || value === 'on' || value === 1 || value === '1';
+}
+
+function entityZoneValue(entity) {
+  return ngsiValue(entity?.zone, 'A');
+}
+
+function getLiveZoneMetrics(entities, zone = 'A') {
+  const zoneEntities = (entities || [])
+    .filter(entity => !isLegacyMatterEntity(entity))
+    .filter(entity => entityZoneValue(entity) === zone);
+  const temperatureSensors = zoneEntities.filter(entity => entity.type === 'TemperatureSensor');
+  const humiditySensors = zoneEntities.filter(entity => entity.type === 'HumiditySensor');
+  const controlledLoads = zoneEntities.filter(entity => entity.type === 'SmartPlug');
+  const maxTemperature = maxNgsiNumber(temperatureSensors, 'temperature');
+  const maxHumidity = maxNgsiNumber(humiditySensors, 'measuredValue');
+  const maxPower = maxNgsiNumber(controlledLoads, 'activePower');
+  const poweredLoads = controlledLoads.filter(entity => normalizeOnOffValue(ngsiValue(entity.onOff))).length;
+  const highestPowerLoad = [...controlledLoads]
+    .sort((a, b) => Number(ngsiValue(b.activePower, 0)) - Number(ngsiValue(a.activePower, 0)))[0] || null;
+
+  return {
+    zone,
+    maxTemperature,
+    maxHumidity,
+    maxPower,
+    poweredLoads,
+    loadCount: controlledLoads.length,
+    highestPowerLoad,
+    temperatureSensors,
+    humiditySensors,
+    controlledLoads
+  };
+}
+
+function maxNgsiNumber(entities, attribute) {
+  const values = entities
+    .map(entity => Number(ngsiValue(entity?.[attribute])))
+    .filter(value => Number.isFinite(value));
+  return values.length ? Math.max(...values) : undefined;
+}
+
 function updateRiskUI(risk) {
   const card = document.getElementById('risk-zone-card');
   if (!card) return;
@@ -364,6 +413,14 @@ function updateRiskUI(risk) {
     actionsEl.innerHTML = risk.recommendedActions?.length
       ? risk.recommendedActions.map(a => `<span class="risk-action-tag">${a}</span>`).join('')
       : '';
+  }
+
+  const policyCopy = document.getElementById('safety-policy-copy');
+  if (policyCopy && risk.safetyPolicy) {
+    const policy = risk.safetyPolicy;
+    policyCopy.textContent = policy.autoCriticalActionsEnabled
+      ? 'Critical mode is configured for auto simulation; all actions are still logged with ACK/ERROR.'
+      : `Critical mode creates an approval request, reminds after ${policy.firstReminderSec}s, and escalates after ${policy.backupEscalationSec}s.`;
   }
 }
 
@@ -390,8 +447,24 @@ function updateCommandsUI(commands) {
     const device = c.deviceId?.value || '';
     const status = c.status?.value || '';
     const reason = c.reason?.value || '';
+    const requestedBy = c.requestedBy?.value || '';
+    const approvalRequired = c.approvalRequired?.value === true;
+    const policy = c.policy?.value || '';
     const shortDevice = device.split(':').pop();
-    return `<div class="command-item"><span>${action} -> ${shortDevice} (${reason})</span><span class="command-status ${(status||'').toLowerCase()}">${status}</span></div>`;
+    const meta = [
+      requestedBy ? `by ${escapeHtml(requestedBy)}` : '',
+      approvalRequired ? 'human approval required' : '',
+      policy ? escapeHtml(policy) : ''
+    ].filter(Boolean).join(' | ');
+    return `
+      <div class="command-item">
+        <span>
+          <strong>${escapeHtml(action)} -> ${escapeHtml(shortDevice)}</strong>
+          <small>${escapeHtml(reason)}</small>
+          ${meta ? `<em>${meta}</em>` : ''}
+        </span>
+        <span class="command-status ${(status || '').toLowerCase()}">${escapeHtml(status)}</span>
+      </div>`;
   }).join('');
 }
 

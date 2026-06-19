@@ -36,10 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
       </table>
     `) + createInfoPanel('Simulation Scenarios', `
       <table>
-        <tr><th>Scenario</th><th>Temperature</th><th>Power</th><th>Humidity</th><th>Expected Result</th></tr>
-        <tr><td style="color:var(--success)">Normal</td><td>25&ndash;33&deg;C</td><td>50&ndash;150W</td><td>45&ndash;65%</td><td>Score ~5, NORMAL</td></tr>
-        <tr><td style="color:var(--warning)">Warning</td><td>41&ndash;47&deg;C</td><td>810&ndash;910W</td><td>76&ndash;86%</td><td>Score ~55, WARNING</td></tr>
-        <tr><td style="color:var(--danger)">Critical</td><td>51&ndash;59&deg;C</td><td>960&ndash;1000W</td><td>91&ndash;99%</td><td>Score ~100, CRITICAL</td></tr>
+        <tr><th>Scenario</th><th>Source</th><th>Injected Zone A Metrics</th><th>Purpose</th></tr>
+        <tr><td style="color:var(--success)">normal</td><td><code>sim-seed/normal.json</code></td><td>max temp 24.3&deg;C, max power 91W, max humidity 49.9%</td><td>Seed baseline</td></tr>
+        <tr><td style="color:var(--warning)">heat-wave</td><td><code>sim-seed/heat-wave.json</code></td><td>max temp 32.1&deg;C, max power 135.2W, max humidity 49.7%</td><td>Climate stress seed</td></tr>
+        <tr><td style="color:var(--danger)">overload</td><td><code>sim-seed/overload.json</code></td><td>max temp 27.9&deg;C, max power 1053.6W, max humidity 49.4%</td><td>Electrical load seed</td></tr>
+        <tr><td>noisy</td><td><code>sim-seed/noisy.json</code></td><td>max temp 26.2&deg;C, max power 92.7W, max humidity 53.6%</td><td>Noisy sensor seed</td></tr>
+        <tr><td>offline</td><td><code>sim-seed/offline.json</code></td><td>max temp 24.3&deg;C, max power 82.1W, max humidity 51.8%</td><td>Offline/degraded seed</td></tr>
+        <tr><td style="color:var(--danger)">critical</td><td>built-in demo fallback</td><td>temp 55&deg;C, power 980W, humidity 95%</td><td>Judge demo critical fire-risk injection</td></tr>
       </table>
     `);
   }

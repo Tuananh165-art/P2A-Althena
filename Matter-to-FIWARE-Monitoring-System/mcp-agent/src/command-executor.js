@@ -6,7 +6,7 @@ class CommandExecutor {
   async execute(deviceId, action, reason, options = {}) {
     const commandId = `cmd-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const timestamp = new Date().toISOString();
-    const status = options.status || 'PENDING';
+    const status = options.status || 'SIMULATED_ACK';
 
     const execution = {
       id: `urn:ngsi-ld:CommandExecution:${commandId}`,
@@ -16,7 +16,11 @@ class CommandExecutor {
       action: { type: 'Text', value: action },
       reason: { type: 'Text', value: reason },
       status: { type: 'Text', value: status },
-      source: { type: 'Text', value: options.source || 'unknown' },
+      source: { type: 'Text', value: options.source || 'simulator' },
+      requestedBy: { type: 'Text', value: options.requestedBy || 'unknown' },
+      auto: { type: 'Boolean', value: options.auto === true },
+      approvalRequired: { type: 'Boolean', value: options.approvalRequired === true },
+      policy: { type: 'Text', value: options.policy || '' },
       error: { type: 'Text', value: options.error || '' },
       timestamp: { type: 'DateTime', value: timestamp }
     };

@@ -12,13 +12,15 @@ class OrionClient {
 
   sanitizeString(value) {
     if (typeof value !== 'string') return value;
-    // Orion can reject some non-ASCII/mojibake characters in attribute values.
-    // Keep payloads portable by normalizing common symbols and stripping controls.
+    // Orion rejects some characters in attribute values. Keep stored audit text
+    // readable while removing forbidden punctuation and mojibake/control chars.
     return value
       .replace(/\r\n/g, '\n')
       .replace(/[\u2012\u2013\u2014\u2015]/g, '-')
       .replace(/\u00B0/g, ' deg')
+      .replace(/[<>"'=;()]/g, ' ')
       .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '')
+      .replace(/[ \t]{2,}/g, ' ')
       .trim();
   }
 

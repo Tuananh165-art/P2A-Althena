@@ -1,20 +1,34 @@
-const config = require('../config');
-
 class AlertManager {
   constructor() {
-    this.cooldownMap = new Map();
-    this.cooldownMs = config.risk.cooldownMs;
     this.alertHistory = [];
+    this.activeFingerprints = new Map();
   }
 
-  shouldPublish(zone, level) {
+  alertFingerprint(zone, level, message = '', rationale = '') {
+    return [
+      zone,
+      level,
+      message,
+      rationale
+    ].map(value => String(value || '').trim().toLowerCase()).join('|');
+  }
+
+  shouldPublish(zone, level, message = '', rationale = '') {
     const key = `${zone}:${level}`;
-    const last = this.cooldownMap.get(key);
-    if (last && Date.now() - last < this.cooldownMs) {
+    const fingerprint = this.alertFingerprint(zone, level, message, rationale);
+    if (this.activeFingerprints.get(key) === fingerprint) {
       return false;
     }
-    this.cooldownMap.set(key, Date.now());
+    this.activeFingerprints.set(key, fingerprint);
     return true;
+  }
+
+  clearZone(zone) {
+    for (const key of this.activeFingerprints.keys()) {
+      if (key.startsWith(`${zone}:`)) {
+        this.activeFingerprints.delete(key);
+      }
+    }
   }
 
   createAlert(zone, level, message, rationale) {

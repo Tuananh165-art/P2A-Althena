@@ -7,7 +7,7 @@ class AlertSubscriber {
     this.bot = telegramBot;
     this.chatIds = chatIds;
     this.seenAlerts = new Set();
-    this.cooldowns = new Map();
+    this.sentNotifications = new Set();
     this.running = false;
   }
 
@@ -47,32 +47,50 @@ class AlertSubscriber {
       const alertId = alert.id || `${alert.zone?.value}-${alert.timestamp?.value}`;
       if (this.seenAlerts.has(alertId)) continue;
 
-      this.seenAlerts.add(alertId);
-
       const level = alert.level?.value || alert.level || 'warning';
       if (level === 'normal') continue;
 
-      const zone = alert.zone?.value || alert.zone || 'A';
-      if (!this.canSend(zone)) continue;
-
       await this.pushAlert(alert);
-
-      this.cooldowns.set(zone, Date.now());
     }
 
     if (this.seenAlerts.size > 200) {
       const arr = [...this.seenAlerts];
       this.seenAlerts = new Set(arr.slice(-100));
     }
+
+    if (this.sentNotifications.size > 200) {
+      const arr = [...this.sentNotifications];
+      this.sentNotifications = new Set(arr.slice(-100));
+    }
   }
 
-  canSend(zone) {
-    const lastSent = this.cooldowns.get(zone);
-    if (!lastSent) return true;
-    return Date.now() - lastSent > config.alert.cooldownMs;
+  notificationFingerprint(alert) {
+    const level = alert.level?.value || alert.level || 'warning';
+    const zone = alert.zone?.value || alert.zone || 'A';
+    const message = alert.message?.value || alert.message || '';
+    const rationale = alert.rationale?.value || alert.rationale || '';
+    return [level, zone, message, rationale]
+      .map(value => String(value || '').trim().toLowerCase())
+      .join('|');
+  }
+
+  shouldSend(alert) {
+    const fingerprint = this.notificationFingerprint(alert);
+    if (this.sentNotifications.has(fingerprint)) {
+      console.log('[OpenClaw] Duplicate alert notification suppressed');
+      return false;
+    }
+    this.sentNotifications.add(fingerprint);
+    return true;
   }
 
   async pushAlert(alert) {
+    const alertId = alert.id || `${alert.zone?.value || alert.zone}-${alert.timestamp?.value || alert.timestamp}`;
+    if (this.seenAlerts.has(alertId)) return false;
+    this.seenAlerts.add(alertId);
+
+    if (!this.shouldSend(alert)) return false;
+
     const text = fmt.formatAlertPush(alert);
 
     for (const chatId of this.chatIds) {
@@ -83,6 +101,8 @@ class AlertSubscriber {
         console.error(`[OpenClaw] Failed to push alert to ${chatId}: ${e.message}`);
       }
     }
+
+    return true;
   }
 
   seenAlertIds() {

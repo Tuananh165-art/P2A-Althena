@@ -1,13 +1,22 @@
+param(
+    [string]$SeedScenario = 'small-batch',
+    [ValidateSet('simulator', 'live')]
+    [string]$DeviceControlMode = 'simulator',
+    [switch]$SkipSeed
+)
+
 # Start FIWARE Resilience Monitor - All Services
 Write-Host 'Starting all services...' -ForegroundColor Green
 
 $basePath = $PSScriptRoot
+$repoRoot = Split-Path $basePath -Parent
 $proxyFile = Join-Path $basePath 'proxy-server.js'
 $dashboardDir = Join-Path $basePath 'monitor-dashboard'
 $mcpAgentDir = Join-Path $basePath 'mcp-agent'
 $zigbeeBridgeDir = Join-Path $basePath 'zigbee-bridge'
 $openClawDir = Join-Path $basePath 'openclaw-gateway'
-$openClawSkillsDir = Join-Path (Split-Path $basePath -Parent) 'openclaw-skills'
+$openClawSkillsDir = Join-Path $repoRoot 'openclaw-skills'
+$seedImporter = Join-Path $repoRoot 'scripts\import-sim-seed.ps1'
 $dashboardPort = 8001
 $dashboardUrl = "http://localhost:$dashboardPort"
 
@@ -33,6 +42,10 @@ if (-not (Test-Path $openClawDir)) {
 }
 if (-not (Test-Path $openClawSkillsDir)) {
     Write-Host "Missing folder: $openClawSkillsDir" -ForegroundColor Red
+    exit 1
+}
+if (-not $SkipSeed -and -not (Test-Path $seedImporter)) {
+    Write-Host "Missing seed importer: $seedImporter" -ForegroundColor Red
     exit 1
 }
 
@@ -62,6 +75,17 @@ if (-not $orionReady) {
     exit 1
 }
 
+if (-not $SkipSeed) {
+    Write-Host "Importing sim seed data ($SeedScenario) into Orion/OpenClaw context..." -ForegroundColor Yellow
+    & $seedImporter -Scenario $SeedScenario -OrionUrl 'http://localhost:1026'
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host 'Seed import failed.' -ForegroundColor Red
+        exit $LASTEXITCODE
+    }
+} else {
+    Write-Host 'Skipping sim seed import.' -ForegroundColor Yellow
+}
+
 # Start Proxy Server in background
 Write-Host 'Starting Proxy Server (port 3001)...' -ForegroundColor Cyan
 Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location '$basePath'; node '$proxyFile'" -WindowStyle Normal
@@ -70,31 +94,31 @@ Start-Sleep -Seconds 2
 
 # Start FIMAT Agent in background
 Write-Host 'Starting FIMAT Agent (port 3000)...' -ForegroundColor Cyan
-Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "`$env:ENABLE_LEGACY_MATTER_EMULATORS='false'; Set-Location '$basePath\fimat-agent'; npm start" -WindowStyle Normal
+Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "`$env:ENABLE_LEGACY_MATTER_EMULATORS='false'; Set-Location '$basePath\fimat-agent'; npm.cmd start" -WindowStyle Normal
 
 Start-Sleep -Seconds 2
 
 # Start Zigbee Bridge in background
 Write-Host 'Starting Zigbee Bridge (port 3003)...' -ForegroundColor Cyan
-Start-Process powershell.exe -ArgumentList '-Command', "Set-Location '$zigbeeBridgeDir'; npm start" -WindowStyle Hidden
+Start-Process powershell.exe -ArgumentList '-Command', "Set-Location '$zigbeeBridgeDir'; npm.cmd start" -WindowStyle Hidden
 
 Start-Sleep -Seconds 2
 
 # Start MCP Agent in background
-Write-Host 'Starting MCP Agent in live device mode (port 3002)...' -ForegroundColor Cyan
-Start-Process powershell.exe -ArgumentList '-Command', "`$env:DEVICE_CONTROL_MODE='live'; Set-Location '$mcpAgentDir'; npm start" -WindowStyle Hidden
+Write-Host "Starting MCP Agent in $DeviceControlMode device mode (port 3002)..." -ForegroundColor Cyan
+Start-Process powershell.exe -ArgumentList '-Command', "`$env:DEVICE_CONTROL_MODE='$DeviceControlMode'; Set-Location '$mcpAgentDir'; npm.cmd start" -WindowStyle Hidden
 
 Start-Sleep -Seconds 2
 
 # Start OpenClaw Gateway in background
 Write-Host 'Starting OpenClaw Gateway (port 3004)...' -ForegroundColor Cyan
-Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "`$env:OPENCLAW_SKILLS_DIR='$openClawSkillsDir'; Set-Location '$openClawDir'; npm start" -WindowStyle Normal
+Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "`$env:OPENCLAW_SKILLS_DIR='$openClawSkillsDir'; Set-Location '$openClawDir'; npm.cmd start" -WindowStyle Normal
 
 Start-Sleep -Seconds 2
 
 # Start Dashboard HTTP Server in background
 Write-Host "Starting Dashboard (port $dashboardPort)..." -ForegroundColor Cyan
-Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location '$dashboardDir'; npx -y http-server -a localhost -p $dashboardPort -c-1" -WindowStyle Normal
+Start-Process powershell.exe -ArgumentList '-NoExit', '-Command', "Set-Location '$dashboardDir'; npx.cmd -y http-server -a localhost -p $dashboardPort -c-1" -WindowStyle Normal
 
 Write-Host "`nAll services started.`n" -ForegroundColor Green
 Write-Host "Dashboard: $dashboardUrl" -ForegroundColor Cyan

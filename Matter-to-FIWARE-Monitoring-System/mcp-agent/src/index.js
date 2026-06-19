@@ -1,6 +1,8 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const express = require('express');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 const OrionClient = require('./orion-client');
 const RiskEngine = require('./risk-engine');
 const AlertManager = require('./alert-manager');
@@ -15,6 +17,18 @@ const SCENARIOS = {
   warning: { temperature: 44, humidity: 82, power: 860, plugOn: true },
   critical: { temperature: 55, humidity: 95, power: 980, plugOn: true }
 };
+const SEED_SCENARIO_ALIASES = {};
+const SEED_DIR = path.resolve(__dirname, '..', '..', '..', 'sim-seed');
+
+function safetyPolicy() {
+  return {
+    sensitiveActionsRequireApproval: config.safety.requireOperatorApproval,
+    autoCriticalActionsEnabled: config.safety.autoCriticalActions,
+    firstReminderSec: config.safety.escalationFirstReminderSec,
+    backupEscalationSec: config.safety.escalationBackupSec,
+    criticalActionMode: config.safety.autoCriticalActions ? 'AUTO_SIMULATION' : 'HUMAN_APPROVAL_REQUIRED'
+  };
+}
 
 function attr(type, value, metadata) {
   const out = { type, value };
@@ -27,6 +41,43 @@ function ngsiValue(value) {
     return value.value;
   }
   return value;
+}
+
+function summarizeSeedScenario(scenario) {
+  const seedName = SEED_SCENARIO_ALIASES[scenario] || scenario;
+  const filePath = path.join(SEED_DIR, `${seedName}.json`);
+  if (!fs.existsSync(filePath)) {
+    return { values: SCENARIOS[scenario], sourceScenario: scenario, seedFile: null };
+  }
+
+  const entities = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  const list = Array.isArray(entities) ? entities : [entities];
+  const zoneA = list.filter(entity => entityZone(entity) === 'A');
+  const sourceEntities = zoneA.length ? zoneA : list;
+  const temps = sourceEntities
+    .filter(entity => entity.type === 'TemperatureSensor')
+    .map(entity => Number(ngsiValue(entity.temperature)))
+    .filter(Number.isFinite);
+  const hums = sourceEntities
+    .filter(entity => entity.type === 'HumiditySensor')
+    .map(entity => Number(ngsiValue(entity.measuredValue)))
+    .filter(Number.isFinite);
+  const plugs = sourceEntities.filter(entity => entity.type === 'SmartPlug');
+  const powers = plugs
+    .map(entity => Number(ngsiValue(entity.activePower)))
+    .filter(Number.isFinite);
+  const anyPlugOn = plugs.some(entity => ngsiValue(entity.onOff) !== false);
+
+  return {
+    values: {
+      temperature: temps.length ? Math.max(...temps) : SCENARIOS[scenario]?.temperature ?? 0,
+      humidity: hums.length ? Math.max(...hums) : SCENARIOS[scenario]?.humidity ?? 0,
+      power: powers.length ? Math.max(...powers) : SCENARIOS[scenario]?.power ?? 0,
+      plugOn: plugs.length ? anyPlugOn : SCENARIOS[scenario]?.plugOn ?? true
+    },
+    sourceScenario: seedName,
+    seedFile: filePath
+  };
 }
 
 function entityZone(entity) {
@@ -102,6 +153,7 @@ class MCPAgent {
     this.alertManager = deps.alertManager || new AlertManager();
     this.commandExecutor = deps.commandExecutor || new CommandExecutor();
     this.aiReasoner = deps.aiReasoner || new AIReasoner();
+    this.hasCustomDeviceAdapter = Boolean(deps.deviceAdapter);
     this.deviceAdapter = deps.deviceAdapter || createFimatDeviceAdapter();
     this.lastRiskResults = [];
     this.running = false;
@@ -175,6 +227,7 @@ class MCPAgent {
             rationale: attr('Text', result.rationale),
             reasoningSource: attr('Text', aiAnalysis.source),
             confidence: attr('Number', aiAnalysis.confidence),
+            safetyPolicy: attr('StructuredValue', safetyPolicy()),
             timestamp: attr('DateTime', result.timestamp)
           }
         );
@@ -184,6 +237,8 @@ class MCPAgent {
 
       if (result.riskLevel !== 'normal') {
         await this.publishAlertIfAllowed(result);
+      } else {
+        this.alertManager.clearZone(result.zone);
       }
 
       if (result.riskLevel === 'critical') {
@@ -193,15 +248,17 @@ class MCPAgent {
   }
 
   async publishAlertIfAllowed(result) {
-    const shouldAlert = this.alertManager.shouldPublish(result.zone, result.riskLevel);
-    if (!shouldAlert) return null;
-
-    const alert = this.alertManager.createAlert(
+    const message = `Climate risk ${result.riskLevel} in zone ${result.zone}: score ${result.riskScore}`;
+    const rationale = result.rationale;
+    const shouldAlert = this.alertManager.shouldPublish(
       result.zone,
       result.riskLevel,
-      `Climate risk ${result.riskLevel} in zone ${result.zone}: score ${result.riskScore}`,
-      result.rationale
+      message,
+      rationale
     );
+    if (!shouldAlert) return null;
+
+    const alert = this.alertManager.createAlert(result.zone, result.riskLevel, message, rationale);
 
     try {
       await this.orion.upsertEntity(alert.id, 'AlertEvent', {
@@ -216,8 +273,22 @@ class MCPAgent {
       console.error(`[MCP] AlertEvent upsert error: ${e.message}`, e.response?.status, JSON.stringify(e.response?.data)?.slice(0, 200));
     }
 
+    await this.pushAlertToOpenClaw(alert);
+
     console.log(`[MCP] Alert published: ${result.riskLevel} zone=${result.zone} score=${result.riskScore}`);
     return alert;
+  }
+
+  async pushAlertToOpenClaw(alert) {
+    if (!config.openclaw.alertWebhookEnabled || !config.openclaw.alertWebhookUrl) {
+      return;
+    }
+
+    try {
+      await axios.post(config.openclaw.alertWebhookUrl, alert, { timeout: 3000 });
+    } catch (e) {
+      console.error(`[MCP] OpenClaw alert webhook failed: ${e.message}`);
+    }
   }
 
   async executeActions(result, bypassCooldown = false) {
@@ -238,17 +309,63 @@ class MCPAgent {
       for (const plug of plugs) {
         const onOff = ngsiValue(plug.onOff);
         if (onOff === false) continue;
+
+        if (config.safety.requireOperatorApproval && !config.safety.autoCriticalActions) {
+          const exec = await this.recordApprovalRequired(
+            plug.id,
+            'TURN_OFF',
+            `Critical fire risk in zone ${result.zone}; operator approval required before load isolation`,
+            result.zone
+          );
+          executions.push(exec);
+          continue;
+        }
+
         const exec = await this.invokeCommand(
           plug.id,
           'TURN_OFF',
           `Critical fire risk mitigation for zone ${result.zone}`,
-          { requestedBy: 'mcp-auto-critical', auto: true }
+          {
+            requestedBy: 'mcp-auto-critical',
+            auto: true,
+            policy: safetyPolicy().criticalActionMode
+          }
         );
         executions.push(exec);
       }
     }
 
     return executions;
+  }
+
+  async recordApprovalRequired(deviceId, action, reason, zone) {
+    const policy = safetyPolicy();
+    const exec = await this.commandExecutor.execute(deviceId, action, reason, {
+      status: 'APPROVAL_REQUIRED',
+      source: 'mcp-policy',
+      requestedBy: 'mcp-critical-policy',
+      auto: false,
+      approvalRequired: true,
+      policy: `Human approval required; reminder=${policy.firstReminderSec}s; backup escalation=${policy.backupEscalationSec}s`
+    });
+
+    exec.zone = attr('Text', zone);
+    await this.orion.upsertEntity(exec.id, 'CommandExecution', {
+      commandId: exec.commandId,
+      deviceId: exec.deviceId,
+      action: exec.action,
+      reason: exec.reason,
+      status: exec.status,
+      source: exec.source,
+      requestedBy: exec.requestedBy,
+      auto: exec.auto,
+      approvalRequired: exec.approvalRequired,
+      policy: exec.policy,
+      zone: exec.zone,
+      error: exec.error,
+      timestamp: exec.timestamp
+    });
+    return exec;
   }
 
   async queryEntities(zone, type, since) {
@@ -274,18 +391,19 @@ class MCPAgent {
   }
 
   computeRisk(zone = 'A') {
-    return this.lastRiskResults.find(r => r.zone === zone) || {
+    const result = this.lastRiskResults.find(r => r.zone === zone) || {
       zone,
       riskScore: 0,
       riskLevel: 'normal',
       rationale: 'No data',
       recommendedActions: []
     };
+    return { ...result, safetyPolicy: safetyPolicy() };
   }
 
   async publishAlert(level, zone, message, rationale) {
-    if (!this.alertManager.shouldPublish(zone, level)) {
-      return { status: 'cooldown', message: 'Alert suppressed by cooldown' };
+    if (!this.alertManager.shouldPublish(zone, level, message, rationale)) {
+      return { status: 'duplicate', message: 'Alert suppressed because the same notification is already active' };
     }
 
     const alert = this.alertManager.createAlert(zone, level, message, rationale);
@@ -297,6 +415,7 @@ class MCPAgent {
       status: alert.status,
       timestamp: alert.timestamp
     });
+    await this.pushAlertToOpenClaw(alert);
     return alert;
   }
 
@@ -316,8 +435,16 @@ class MCPAgent {
     let commandError = '';
 
     if (device.type === 'SmartPlug') {
-      if (simulatorMode) {
+      if (simulatorMode && !this.hasCustomDeviceAdapter) {
         await this.updateSmartPlugState(deviceId, action, 'simulator');
+        status = 'SIMULATED_ACK';
+      } else if (simulatorMode && this.hasCustomDeviceAdapter) {
+        adapterResult = await this.deviceAdapter.execute(device, action);
+        await this.updateSmartPlugState(deviceId, action, adapterResult.source || 'simulator');
+        status = 'SIMULATED_ACK';
+      } else if (!deviceProtocol(device) && !this.hasCustomDeviceAdapter) {
+        await this.updateSmartPlugState(deviceId, action, 'virtual-seed');
+        adapterResult = { source: 'virtual-seed' };
         status = 'SIMULATED_ACK';
       } else {
         try {
@@ -335,11 +462,17 @@ class MCPAgent {
     const exec = await this.commandExecutor.execute(deviceId, action, reason, {
       status,
       source: adapterResult.source,
-      error: commandError
+      error: commandError,
+      requestedBy: options.requestedBy || 'unknown',
+      auto: options.auto === true,
+      approvalRequired: options.approvalRequired === true,
+      policy: options.policy || ''
     });
     exec.source = attr('Text', adapterResult.source || 'simulator');
     exec.requestedBy = attr('Text', options.requestedBy || 'unknown');
     exec.auto = attr('Boolean', options.auto === true);
+    exec.approvalRequired = attr('Boolean', options.approvalRequired === true);
+    exec.policy = attr('Text', options.policy || '');
 
     await this.orion.upsertEntity(exec.id, 'CommandExecution', {
       commandId: exec.commandId,
@@ -350,6 +483,8 @@ class MCPAgent {
       source: exec.source,
       requestedBy: exec.requestedBy,
       auto: exec.auto,
+      approvalRequired: exec.approvalRequired,
+      policy: exec.policy,
       error: exec.error,
       timestamp: exec.timestamp
     });
@@ -388,7 +523,8 @@ class MCPAgent {
       throw new Error('Scenario simulation is disabled while DEVICE_CONTROL_MODE=live');
     }
 
-    const values = SCENARIOS[scenario];
+    const seedProfile = summarizeSeedScenario(scenario);
+    const values = seedProfile.values;
     if (!values) {
       throw new Error(`Unsupported scenario: ${scenario}`);
     }
@@ -460,6 +596,8 @@ class MCPAgent {
       requestedBy: attr('Text', requestedBy),
       source: attr('Text', source),
       status: attr('Text', 'SIMULATED'),
+      seedScenario: attr('Text', seedProfile.sourceScenario),
+      seedFile: attr('Text', seedProfile.seedFile || 'built-in-fallback'),
       timestamp: attr('DateTime', timestamp)
     };
     await this.orion.upsertEntity(auditId, 'SimulationRun', audit);
@@ -468,6 +606,8 @@ class MCPAgent {
       status: 'SIMULATED',
       auditId,
       scenario,
+      sourceScenario: seedProfile.sourceScenario,
+      seedFile: seedProfile.seedFile,
       zone,
       source,
       values,
