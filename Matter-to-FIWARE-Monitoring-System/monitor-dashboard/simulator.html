@@ -6,7 +6,7 @@
     <title>Simulator — Climate Resilience Copilot</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="common.css">
-    <link rel="stylesheet" href="workspace.css?v=1">
+    <link rel="stylesheet" href="workspace.css?v=4">
 </head>
 <body class="workspace-body">
 <div class="container">
@@ -29,6 +29,21 @@
             <span class="status-label">Last update</span>
             <span id="last-update">--</span>
         </div>
+    </div>
+
+    <div class="section demo-process-section" aria-labelledby="demo-process-title">
+        <div class="demo-process-header">
+            <div>
+                <h3 id="demo-process-title">Alert escalation process table</h3>
+                <p>Quickly review the escalation flow before starting the demo.</p>
+            </div>
+            <span>Pre-demo checklist</span>
+        </div>
+        <img
+            class="demo-process-image"
+            src="assets/alert-escalation-process.svg?v=3"
+            alt="Normal → Safe data → Low risk → Continue monitoring; Warning → Temperature, humidity, or power increases → Explain warning → Notify and inspect; Critical → High temperature + high power + high humidity → Critical alert + response procedure → Request approval; Action/Fallback → Approved or timeout reached → Simulated mitigation or escalation → Record ACK/ERROR"
+        >
     </div>
 
     <!-- Simulation Controls -->
